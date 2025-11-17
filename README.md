@@ -48,7 +48,9 @@ El proceso de ETL (Extracción, Transformación y Carga) está automatizado medi
 
 ## ▶️ Próximos Pasos
 
-El siguiente paso será realizar el análisis de datos (Paso 8) mediante consultas SQL y/o código Python (e.g., usando Pandas o librerías de visualizac
+- Realizar pruebas del proceso ETL para verificar la correcta extracción, transformación y carga de los datos.
+- Comenzar el análisis exploratorio de los indicadores económicos.
+- Generar visualizaciones y comparar la evolución del poder adquisitivo.
 
 
 
