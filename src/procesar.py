@@ -379,6 +379,9 @@ def _obtener_o_crear_periodo(anio, mes=None, trimestre_fk=None):
 
 
 def _obtener_o_crear(tabla, columna_busqueda, valor_busqueda, **kwargs):
+    """
+    Función centralizada para buscar o crear una dimensión (Periodo, Geografía, Indicador).
+    """
     id_columna = f"id_{tabla}"
     tabla_nombre = f"tbl_{tabla}"
 
@@ -386,6 +389,12 @@ def _obtener_o_crear(tabla, columna_busqueda, valor_busqueda, **kwargs):
         # 1. Intentar buscar el ID
         sql_select = f"SELECT {id_columna} FROM {tabla_nombre} WHERE {columna_busqueda} = ?"
         cursor.execute(sql_select, (valor_busqueda,))
+
+        resultado = cursor.fetchone()
+
+        if resultado:
+            # El periodo ya existe. Devolvemos su ID.
+            return resultado[0]
 
         # 2. El registro no existe. Lo insertamos.
 

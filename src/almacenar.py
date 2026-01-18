@@ -3,7 +3,7 @@ Recibe los datos procesados de procesar.py y los inserta en la BD
 """
 import sqlite3
 
-from db import get_cursor
+from src.db import get_cursor
 
 def insertar_datos( tabla, datos):
     
