@@ -5,13 +5,12 @@ import sqlite3
 
 from db import get_cursor
 
-def insertar_datos(conexion, tabla, datos):
+def insertar_datos( tabla, datos):
     
     if not datos:
         print(f"No existen datos para insertar en la tabla: {tabla}.")
         return
 
-    cursor = conexion.cursor()
     
     sql = ""
 
