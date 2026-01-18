@@ -25,7 +25,7 @@ def main():
         if extractor.obtener_datos():
             datos_procesados = procesar_datos(codigo, extractor.raw_data)
             print("Procesando datos de tabla ", codigo)
-            print(datos_procesados[:10])
+            print(datos_procesados)
 
             tabla_destino = ""
 
