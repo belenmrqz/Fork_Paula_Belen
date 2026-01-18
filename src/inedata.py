@@ -41,7 +41,7 @@ class INEDataExtractor:
 
     def _esquema(self, data=None):
         if data is None:
-            data = self.data[0] if isinstance(self.data, list) else self.data
+            data = self.raw_data[0] if isinstance(self.raw_data, list) else self.raw_data
         esquema = {}
         if isinstance(data, dict):
             for k, v in data.items():
