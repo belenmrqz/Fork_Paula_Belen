@@ -139,7 +139,7 @@ def _procesar_precios(codigo, data):
             categoria_limpia = "Vivienda Total"
 
         elif codigo == IPC:
-            if "General" in cat:
+            if "Índice general" in cat:
                 categoria_limpia = "IPC General"
 
             else:
