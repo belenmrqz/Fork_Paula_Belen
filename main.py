@@ -1,3 +1,4 @@
+from almacenar import insertar_datos
 from config.constantes import (
     IPC,
     IPV,
@@ -10,7 +11,6 @@ from config.constantes import (
 from src.inedata import INEDataExtractor
 from src.procesar import procesar_datos
 
-# from src.almacenar import insertar_datos
 from src.db import DatabaseConnection, crear_base_datos
 
 
@@ -38,7 +38,7 @@ def main():
 
             # Llamamos a almacenar pasándole el nombre
             if tabla_destino and datos_procesados:
-                insertar_datos(db, tabla_destino, datos_procesados)
+                insertar_datos(tabla_destino, datos_procesados)
             # ---------------------------------------------------------
         else:
             print(f"No se pudieron obtener los datos de la tabla {codigo}")
