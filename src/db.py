@@ -82,7 +82,7 @@ def crear_base_datos():
             anio INTEGER NOT NULL,
             trimestre INTEGER, -- NULL si es mensual o anual
             mes INTEGER, -- NULL si es trimestral o anual
-            fecha_iso TEXT NOT NULL UNIQUE -- YYYY-MM-DD 
+            fecha_iso TEXT NOT NULL  -- YYYY-MM-DD 
         );
         """)
         print(f"\n{turquesa}Tabla{reset} {amarillo}'tbl_periodo'{reset}{turquesa} creada o ya existente.{reset}")

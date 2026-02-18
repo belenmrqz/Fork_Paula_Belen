@@ -98,7 +98,7 @@ def _aplanar_nombre_serie(codigo, nombre_serie):
     elif codigo == EAES_PERCENTILES:
         metadata["Sexo"] = partes[0]
         metadata["Geografia"] = partes[1]
-        metadata["Indicador"] = partes[3]  # Media, Mediana, Percentil 10...
+        metadata["Indicador"] = partes[3]  # 10. 25. 50. Media...
 
     # ---------------------------------------------------------
     # EAES OCUPACION (28186)
@@ -155,11 +155,11 @@ def _procesar_precios(codigo, data):
         nombre_base = "IPC" if codigo == IPC else "IPV"
         
         if es_var_anual:
-            nombre_indicador = f"{nombre_base}_Variacion_Anual_INE"
+            nombre_indicador = f"{nombre_base}_Variacion_Anual"
             unidad = "%"
         else:
-            nombre_indicador = f"{nombre_base}_Indice_Base_2021_INE"
-            unidad = "Base 2021=100"
+            nombre_indicador = f"{nombre_base}_Indice"
+            unidad = "Base 2021=100" if codigo == IPC else "Base 2015=100"
 
         id_indicador = _obtener_o_crear("indicador", "nombre", nombre_indicador, unidad=unidad)
 
@@ -282,22 +282,22 @@ def _procesar_salarios(codigo, data):
             nombre_indicador = "Salario_Coste_Trimestral"
 
         elif codigo == EAES_PERCENTILES:
-            PERCENTILES_INTERES = [
-                "Media",
-                "Mediana",
-                "Percentil 10",
-                "Cuartil inferior",
-            ]
-
-            es_interes = any(
-                p.lower() in indicador.lower() for p in PERCENTILES_INTERES
-            )
-            if not es_interes:
+            indicador_limpio = indicador.strip().lower()
+            
+            # Mapeamos los códigos exactos que nos manda el INE en su JSON
+            if indicador_limpio == "media":
+                nombre_indicador = "Salario_Anual_Media"
+            elif indicador_limpio == "50":
+                nombre_indicador = "Salario_Anual_Mediana"
+            elif indicador_limpio == "25":
+                nombre_indicador = "Salario_Anual_Cuartil inferior"
+            elif indicador_limpio == "10":
+                nombre_indicador = "Salario_Anual_Percentil 10"
+            else:
+                # Si es 75, 90 u otra cosa que no usamos, lo saltamos
                 continue
-            nombre_indicador = f"Salario Anual {indicador}"
-
         elif codigo == EAES_OCUPACION:
-            nombre_indicador = "Salario Anual Ocupacion"
+            nombre_indicador = "Salario_Anual_Ocupacion"
 
         else:
             continue
@@ -338,6 +338,7 @@ def _procesar_salarios(codigo, data):
 
 def _obtener_o_crear_periodo(anio, mes=None, trimestre_fk=None):
     mes_calculado = mes
+    trimestre_calculado = None
     fecha_iso = ""
 
     # 1. Caso Mensual (IPC)
@@ -353,29 +354,54 @@ def _obtener_o_crear_periodo(anio, mes=None, trimestre_fk=None):
         elif trimestre_fk == 19: # T1
             mes_calculado = 1
             fecha_iso = f"{anio}-01-01"
+            trimestre_calculado = 1
         elif trimestre_fk == 20: # T2
             mes_calculado = 4
             fecha_iso = f"{anio}-04-01"
+            trimestre_calculado = 2
         elif trimestre_fk == 21: # T3
             mes_calculado = 7
             fecha_iso = f"{anio}-07-01"
+            trimestre_calculado = 4
         elif trimestre_fk == 22: # T4
             mes_calculado = 10
-            fecha_iso = f"{anio}-10-01"
+            trimestre_calculado = 4
         else: raise ValueError(f"Código trimestre {trimestre_fk} error")
 
     # 3. Caso Defecto
     else:
         fecha_iso = f"{anio}-01-01"
 
-    return _obtener_o_crear(
-        tabla="periodo",
-        columna_busqueda="fecha_iso",
-        valor_busqueda=fecha_iso,
-        anio=anio,
-        trimestre=trimestre_fk if (trimestre_fk != 28) else None,
-        mes=mes_calculado,
-    )
+
+    with get_cursor() as cursor:
+        # Construimos la query dinámica para manejar los NULL de SQLite
+        sql_select = "SELECT id_periodo FROM tbl_periodo WHERE anio = ?"
+        parametros = [anio]
+
+        if mes_calculado is not None:
+            sql_select += " AND mes = ?"
+            parametros.append(mes_calculado)
+        else:
+            sql_select += " AND mes IS NULL"
+
+        if trimestre_calculado is not None:
+            sql_select += " AND trimestre = ?"
+            parametros.append(trimestre_calculado)
+        else:
+            sql_select += " AND trimestre IS NULL"
+
+        cursor.execute(sql_select, tuple(parametros))
+        resultado = cursor.fetchone()
+
+        if resultado:
+            return resultado[0] # Ya existe este periodo con esta granularidad exacta
+        
+        # Si no existe, lo insertamos como un periodo nuevo e independiente
+        sql_insert = "INSERT INTO tbl_periodo (anio, mes, trimestre, fecha_iso) VALUES (?, ?, ?, ?)"
+        cursor.execute(sql_insert, (anio, mes_calculado, trimestre_calculado, fecha_iso))
+        return cursor.lastrowid
+
+
 
 
 def _obtener_o_crear(tabla, columna_busqueda, valor_busqueda, **kwargs):
