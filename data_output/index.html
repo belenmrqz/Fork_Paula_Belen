@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analítico - Salarios BBDD</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        p {
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .btn {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            text-decoration: none;
+            color: white;
+            border-radius: 16px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Indicador lateral de color */
+        .btn:nth-child(even) { border-left: 5px solid var(--secondary); }
+        .btn:nth-child(odd) { border-left: 5px solid var(--primary); }
+
+        /* Animación suave al cargar */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn { animation: fadeInUp 0.5s ease backwards; }
+        /* Retraso escalonado para cada botón */
+        .btn:nth-child(1) { animation-delay: 0.1s; }
+        .btn:nth-child(2) { animation-delay: 0.2s; }
+        .btn:nth-child(3) { animation-delay: 0.3s; }
+        .btn:nth-child(4) { animation-delay: 0.4s; }
+        .btn:nth-child(5) { animation-delay: 0.5s; }
+        .btn:nth-child(6) { animation-delay: 0.6s; }
+        .btn:nth-child(7) { animation-delay: 0.7s; }
+        .btn:nth-child(8) { animation-delay: 0.8s; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Gestión de Relaciones BBDD</h1>
+    <p>Panel de Control de Análisis Salarial</p>
+
+    <div class="menu-container">
+        <a href="1_evolucion_salarios.html" class="btn">📈 Evolución Salario Medio</a>
+        <a href="2_vivienda_vs_salarios.html" class="btn">🏠 Vivienda vs Salarios</a>
+        <a href="3_brecha_salarial.html" class="btn">⚖️ Brecha de Género</a>
+        <a href="4_paro_vs_salarios.html" class="btn">📉 Paro y Salarios</a>
+        <a href="4b_correlacion_paro_salarios.html" class="btn">🔗 Correlación Paro/Salario</a>
+        <a href="5_salario_nominal_vs_real.html" class="btn">💵 Salario Nominal vs Real</a>
+        <a href="6_calidad_empleo.html" class="btn">🏆 Calidad del Empleo</a>
+        <a href="7_desigualdad_salarial.html" class="btn">📊 Desigualdad Salarial</a>
+    </div>
+
+</body>
+</html>
