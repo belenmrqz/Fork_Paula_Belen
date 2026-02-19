@@ -1,3 +1,6 @@
+import sys
+
+# --- Imports de la Fase 1 (API -> SQLite) ---
 from config.constantes import (
     IPC,
     IPV,
@@ -12,10 +15,12 @@ from src.procesar import procesar_datos
 from src.almacenar import insertar_datos
 from src.db import DatabaseConnection, crear_base_datos
 
+# --- Imports de la Fase 2 y 3 (Polars y Plotly) ---
+from analysis.transform import process_data_polars
+from analysis.visualize import generate_plotly_charts
 
-def main():
+def etl_fase1_extraccion():
 
-    db = DatabaseConnection().get_connection()
     crear_base_datos()
 
     tablas = [IPC, IPV, TASA_PARO, TEMPORALIDAD, EAES_OCUPACION, EAES_PERCENTILES, ETCL]
@@ -48,6 +53,46 @@ def main():
 
     DatabaseConnection().close()
 
+def menu():
+    """
+    Menú interactivo de terminal para orquestar todo el pipeline de datos.
+    """
+    while True:
+        print("\n" + "="*50)
+        print(" PANEL DE CONTROL - PROYECTO DATOS INE")
+        print("="*50)
+        print("1. Descargar y actualizar Base de Datos (ETL - Fase 1)")
+        print("2. Procesar Datasets con Polars         (ETL - Fase 2)")
+        print("3. Generar Gráficos con Plotly          (ETL - Fase 3)")
+        print("4. Ejecutar Pipeline Completo           (Todo a la vez)")
+        print("5. Salir")
+        print("="*50)
+        
+        opcion = input("Elige una opción (1-5): ")
+        
+        if opcion == '1':
+            etl_fase1_extraccion()
+        
+        elif opcion == '2':
+            process_data_polars()
+            
+        elif opcion == '3':
+            generate_plotly_charts()
+            
+        elif opcion == '4':
+            print("\nINICIANDO PIPELINE COMPLETO...")
+            etl_fase1_extraccion()
+            process_data_polars()
+            generate_plotly_charts()
+            print("\n¡PIPELINE COMPLETO FINALIZADO CON ÉXITO!")
+            
+        elif opcion == '5':
+            print("\n¡Hasta pronto!")
+            sys.exit()
+            
+        else:
+            print("\nOpción no válida. Inténtalo de nuevo.")
+
 
 if __name__ == "__main__":
-    main()
+    menu()
