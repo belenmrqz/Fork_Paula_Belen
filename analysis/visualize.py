@@ -296,7 +296,7 @@ def generate_plotly_charts():
             facet_col="comunidad",
             facet_col_wrap=4,
             title="Evolución de la Tasa de Paro por CCAA (Gráfico Facetado)",
-            labels={"tasa_paro_media": "Paro (%)", "anio": ""},
+            labels={"tasa_paro_media": "Paro (%)", "anio": "Año"},
         )
 
         # Quitamos la etiqueta redundante de "comunidad=" en cada sub-título
