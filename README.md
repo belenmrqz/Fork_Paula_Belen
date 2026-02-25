@@ -214,6 +214,7 @@ A continuación, se exponen las capturas de los gráficos principales y las conc
 * **Dualidad Regional**: Existe una brecha evidente entre el bloque de bajo paro/salario alto frente a las regiones con desempleo estructural, donde los salarios medios se ven presionados a la baja, estancándose cerca de los 20k-22k€.
 
 Para verificar matemáticamente esta correlación negativa se calculó la Correlación de Pearson:
+
 ![Correlación de Pearson](assets/correlacion_paro.png)
 * **Confirmación Matemática**: Todos los coeficientes son negativos (entre **-0,41 y -0,64**), lo que demuestra que la relación inversa no es casualidad, sino una constante en toda España.
 * **Sensibilidad Regional**: En regiones como **Castilla y León (-0,64)** y **Canarias (-0,61)**, el mercado laboral es más sensible: el paro tiene un impacto mucho más directo y fuerte en el frenado de los salarios que en otras comunidades.
