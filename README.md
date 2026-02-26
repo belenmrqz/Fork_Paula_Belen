@@ -219,6 +219,38 @@ Para verificar matemáticamente esta correlación negativa se calculó la Correl
 * **Confirmación Matemática**: Todos los coeficientes son negativos (entre **-0,41 y -0,64**), lo que demuestra que la relación inversa no es casualidad, sino una constante en toda España.
 * **Sensibilidad Regional**: En regiones como **Castilla y León (-0,64)** y **Canarias (-0,61)**, el mercado laboral es más sensible: el paro tiene un impacto mucho más directo y fuerte en el frenado de los salarios que en otras comunidades.
 
+#### 5. Ilusión monetaria: Salario nominal vs Salario Real (Base IPC 2021 = 100)
+![Salario nomival vs real)](assets/salario_nominal_vs_real.png)
+* **Divergencia Evidente:** Mientras que el **salario nominal** (euros brutos en nómina) muestra un crecimiento fuertemente acelerado en los últimos años, el **salario real** (poder adquisitivo) presenta una tendencia general a la baja desde su pico máximo cerca de 2009.
+
+* **El Punto de Inflexión (2021):** El año 2021 marca el cruce exacto de ambas líneas (al ser el año base del IPC). A partir de este punto, la inflación genera una enorme brecha: los sueldos sobre el papel suben drásticamente, pero la capacidad real de compra cae en picado.
+
+* **Pérdida de Poder Adquisitivo:** A pesar de que en 2025 un trabajador cobra nominalmente unos 550€ más que al inicio de la serie (pasando de ~1.810€ a >2.350€), su poder adquisitivo real es inferior al que tenía hace más de 15 años, cayendo por debajo de los 2.000€.
+
+#### 6. Calidad del Empleo en España: Contratos Indefinidos vd Temporales 
+![Calidad del empleo)](assets/calidad_empleo.png)
+* **Pico de Temporalidad Histórica:** En los primeros años de la serie (hasta 2006 aproximadamente), el empleo temporal presentaba su mayor volumen, con los contratos indefinidos representando apenas el **66-67%** del total de asalariados.
+
+* **Estancamiento en la Década (2010-2020):** Durante estos años, la proporción de contratos indefinidos se mantuvo relativamente estable pero estancada, oscilando entre el **73% y el 76%.** Esto reflejaba una tasa de temporalidad estructural que no lograba bajar del 24-25%.
+
+* **Cambio de Tendencia Drástico:** A partir de 2021-2022 se observa una escalada abrupta en la proporción de contratos indefinidos. La gráfica muestra cómo esta tasa rompe la barrera del 80% y continúa subiendo hasta acercarse al **85%** en 2025, lo que comprime la cuota de contratos temporales a mínimos de la serie (en torno al 15%).
+
+#### 7. Desigualdad Salarial en España: Evolución por Tramos de Ingresos
+![Desigualdad Salarial)](assets/desigualdad_salarial.png)
+* **Brecha entre Media y Mediana:** El salario medio (línea azul) se sitúa sistemáticamente por encima del salario mediano (línea verde) durante toda la serie histórica. Esto indica una distribución asimétrica donde los sueldos más altos tiran del promedio general hacia arriba: en 2023, la media se acerca a los 28.000€, mientras que la mediana (el salario más frecuente) se queda en torno a los 23.000€.
+
+* **Impacto en las Rentas Bajas:** El percentil 10 (la línea roja, que representa al 10% que menos cobra) sufrió una ligera caída durante los años posteriores a 2008, tocando fondo alrededor de 2014 por debajo de los 8.000€ anuales. Sin embargo, en los últimos años muestra una fuerte recuperación, superando los 11.000€ en 2023.
+
+* **Crecimiento Generalizado Reciente:** Tras un periodo de estancamiento general entre 2008 y 2014, a partir de 2016 todos los tramos salariales inician una clara tendencia alcista. Esta subida nominal se acelera especialmente en el último tramo de la gráfica (2020-2023) para todos los niveles de ingresos.
+
+#### 8. Evolución de la Tasa de Paro por CCAA (Gráfico Facetado)
+![Paro facetado)](assets/paro_facetado.png)
+* **Patrón Común de Crisis y Recuperación:** Todas las comunidades autónomas muestran una curva evolutiva muy similar, marcada por un fuerte aumento del desempleo que alcanza su punto máximo alrededor de los años 2013 y 2014, seguido de un descenso progresivo y generalizado en la última década.
+
+* **Las Tasas Históricas Más Altas:** Regiones como Andalucía, Canarias y Extremadura destacan por haber sufrido los impactos más severos durante el pico de la crisis, superando claramente la barrera del 30% de paro.
+
+* **Comunidades con Menor Impacto:** En el extremo opuesto, el País Vasco, Navarra, Aragón y La Rioja presentan las curvas más planas y contenidas. En estas zonas, los picos máximos apenas rozaron el 20% y actualmente cierran la serie temporal situándose en torno al 10% o incluso por debajo.
+
 ___
 
 ## 🚀 Instalación y Uso
