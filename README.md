@@ -143,7 +143,7 @@ El código se organiza separando claramente la configuración, la lógica de ext
 │   ├── 📁 csv               # Datasets limpios (.csv)
 │   ├── 📁 parquet           # Datasets comprimidos (.parquet)
 │   ├── 📁 graphics          # Gráficos interactivos de Plotly (.html)
-│   └── index.html           # 
+│   └── 📄 index.html        # Dashboard web interactivo para navegar por los gráficos.
 ├── 📄 proyecto_datos.db     # Base de datos resultante.
 ├── 📄 requirements.txt      # Dependencias bloqueadas con Hashes de seguridad (uv).
 └── 📄 uv.lock               # Archivo de bloqueo de versiones.
