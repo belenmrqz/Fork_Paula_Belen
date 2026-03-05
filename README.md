@@ -252,6 +252,18 @@ Para verificar matemáticamente esta correlación negativa se calculó la Correl
 * **Comunidades con Menor Impacto:** En el extremo opuesto, el País Vasco, Navarra, Aragón y La Rioja presentan las curvas más planas y contenidas. En estas zonas, los picos máximos apenas rozaron el 20% y actualmente cierran la serie temporal situándose en torno al 10% o incluso por debajo.
 
 ___
+## Métricas y Visualización Exploratoria con Tableau
+
+Una vez finalizada la fase de procesamiento y estructuración de datos con Polar, entramos en la etapa de **Explotación de datos**. 
+Utilizaremos la herramienta de Business Intelligente (BI) **Tableau** para generar informes gráficos sobre los datos procesados anteriormente. 
+
+### Paso 1: Genenrar una conexión híbrida
+
+#### Carga de archivos:
+Importaremos al programa de Tableau los CSV que procesamos anteriormente con Polars
+
+#### Conexión a la BBDD:  
+___
 
 ## 🚀 Instalación y Uso
 
