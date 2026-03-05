@@ -4,6 +4,8 @@
 import polars as pl
 import os
 import sys
+import traceback
+
 
 
 # Aseguramos que Python encuentre la carpeta 'src' subiendo un nivel
@@ -75,6 +77,33 @@ def process_data_polars():
         df_master_employment = pl.read_database(
             query=query_all_employment, connection=db_conn
         )
+
+        # Obtenemos las tablas completas de la bbdd
+        query_t_salaries = """SELECT * FROM T_salarios"""
+        df_salaries = pl.read_database(
+            query=query_t_salaries, connection=db_conn
+        )
+        query_t_prices = """SELECT * FROM T_precios"""
+        df_prices = pl.read_database(
+            query=query_t_prices, connection=db_conn
+        )
+        query_t_employment = """SELECT * FROM T_empleo"""
+        df_employment = pl.read_database(
+            query=query_t_employment, connection=db_conn, infer_schema_length=100000
+        )
+        query_tbl_geography = """SELECT * FROM tbl_geografia"""
+        df_geography= pl.read_database(
+            query=query_tbl_geography, connection=db_conn
+        )
+        query_tbl_indicator = """SELECT * FROM tbl_indicador"""
+        df_indicator = pl.read_database(
+            query=query_tbl_indicator, connection=db_conn
+        )
+        query_tbl_period = """SELECT * FROM tbl_periodo"""
+        df_period = pl.read_database(
+            query=query_tbl_period, connection=db_conn, infer_schema_length=100000
+        )
+
 
         # =======================================================================
         # FASE B: TRANSFORMACIÓN Y ANÁLISIS EN MEMORIA (POLARS)
@@ -355,6 +384,12 @@ def process_data_polars():
             "Salario_Nominal_vs_Real": df_real_salary_comparison,
             "Calidad_Empleo": df_job_quality,
             "Desigualdad_Salarial": df_annual_percentiles,
+            "T_salarios": df_salaries,
+            "T_precios": df_prices,
+            "T_empleo": df_employment,
+            "tbl_geografia": df_geography,
+            "tbl_periodo": df_period,
+            "tbl_indicador": df_indicator
         }
 
         for file_name, df in datasets.items():
@@ -371,6 +406,8 @@ def process_data_polars():
 
     except Exception as e:
         print(f"Error en el procesamiento: {e}")
+        traceback.print_exc()
+
     finally:
         db_conn.close()
 

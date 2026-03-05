@@ -220,14 +220,14 @@ Para verificar matemáticamente esta correlación negativa se calculó la Correl
 * **Sensibilidad Regional**: En regiones como **Castilla y León (-0,64)** y **Canarias (-0,61)**, el mercado laboral es más sensible: el paro tiene un impacto mucho más directo y fuerte en el frenado de los salarios que en otras comunidades.
 
 #### 5. Ilusión monetaria: Salario nominal vs Salario Real (Base IPC 2021 = 100)
-![Salario nomival vs real)](assets/salario_nominal_vs_real.png)
+![Salario nominal vs real)](assets/salario_nominal_vs_real.png)
 * **Divergencia Evidente:** Mientras que el **salario nominal** (euros brutos en nómina) muestra un crecimiento fuertemente acelerado en los últimos años, el **salario real** (poder adquisitivo) presenta una tendencia general a la baja desde su pico máximo cerca de 2009.
 
 * **El Punto de Inflexión (2021):** El año 2021 marca el cruce exacto de ambas líneas (al ser el año base del IPC). A partir de este punto, la inflación genera una enorme brecha: los sueldos sobre el papel suben drásticamente, pero la capacidad real de compra cae en picado.
 
 * **Pérdida de Poder Adquisitivo:** A pesar de que en 2025 un trabajador cobra nominalmente unos 550€ más que al inicio de la serie (pasando de ~1.810€ a >2.350€), su poder adquisitivo real es inferior al que tenía hace más de 15 años, cayendo por debajo de los 2.000€.
 
-#### 6. Calidad del Empleo en España: Contratos Indefinidos vd Temporales 
+#### 6. Calidad del Empleo en España: Contratos Indefinidos vs Temporales 
 ![Calidad del empleo)](assets/calidad_empleo.png)
 * **Pico de Temporalidad Histórica:** En los primeros años de la serie (hasta 2006 aproximadamente), el empleo temporal presentaba su mayor volumen, con los contratos indefinidos representando apenas el **66-67%** del total de asalariados.
 
