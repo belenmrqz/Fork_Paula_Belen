@@ -49,13 +49,32 @@ def _aplanar_nombre_serie(codigo, nombre_serie):
 
     # ---------------------------------------------------------
     # TASA DE PARO (65334)
-    # Ejemplo: "Tasa de paro de la población. Ambos sexos. Total Nacional. Todas las edades."
-    # Índices: [0: Indicador, 1: Sexo, 2: Geo, 3: Edad]
+    # Puede venir como: "Tasa de paro... Ambos sexos. Andalucía. Todas las edades."
+    # O como: "Andalucía. Tasa de paro... Ambos sexos. 25 y más años."
     # ---------------------------------------------------------
     if codigo == TASA_PARO:
-        metadata["Sexo"] = partes[1]
-        metadata["Geografia"] = partes[2]
-        metadata["Grupo_Edad"] = partes[3]
+        for parte in partes:
+            p = parte.strip()
+            
+            # Saltamos los trozos vacíos por si hay dobles puntos
+            if not p:
+                continue
+                
+            # Identificamos el Sexo
+            if p in ["Ambos sexos", "Hombres", "Mujeres"]:
+                metadata["Sexo"] = p
+                
+            # Identificamos la Edad ("Todas las edades", "25 y más años", etc.)
+            elif "edades" in p.lower() or "años" in p.lower():
+                metadata["Grupo_Edad"] = p
+                
+            # Ignoramos el nombre del indicador
+            elif "paro" in p.lower():
+                pass 
+                
+            # Por descarte, si no es nada de lo anterior, es la Geografía
+            else:
+                metadata["Geografia"] = p
 
     # ---------------------------------------------------------
     # TEMPORALIDAD / OCUPADOS (65132)
@@ -434,6 +453,7 @@ def _obtener_o_crear(tabla, columna_busqueda, valor_busqueda, **kwargs):
         elif tabla == "geografia":
             sql_insert = "INSERT INTO tbl_geografia (nombre) VALUES (?)"
             parametros = (valor_busqueda,)
+            print("insertando: ", valor_busqueda)
 
         elif tabla == "indicador":
             sql_insert = "INSERT INTO tbl_indicador (nombre, unidad) VALUES (?, ?)"

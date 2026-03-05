@@ -1,0 +1,14 @@
+id_indicador,nombre,unidad
+1,IPC_Indice,Base 2021=100
+2,IPC_Variacion_Anual,%
+3,IPV_Indice,Base 2015=100
+4,IPV_Variacion_Anual,%
+5,Tasa_Paro,%
+6,Asalariados_Total,Miles de personas
+7,Asalariados_Temporal,Miles de personas
+8,Salario_Anual_Ocupacion,Euros
+9,Salario_Anual_Media,Euros
+10,Salario_Anual_Percentil 10,Euros
+11,Salario_Anual_Cuartil inferior,Euros
+12,Salario_Anual_Mediana,Euros
+13,Salario_Coste_Trimestral,Euros
