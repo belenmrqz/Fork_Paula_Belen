@@ -264,12 +264,51 @@ Importaremos al programa de Tableau los CSV que procesamos anteriormente con Pol
 
 #### Conexión a la BBDD: 
 
+### 📊 Visualizaciones individuales
+Con el objetivo de experimentar la creación de gráficas y aplicar parte de los muchos filtros y funciones que tiene la herramienta Tableau hemos replicado los 9 gráficos que creamos con Plotly. 
+
+Sin embargo, hemos experimentado con 3 gráficos nuevos:
+
+1. **Tasa de paro de Hombres vs Mujeres por edad**
+
+![Tableau_01)](assets/Tableau_TasaParo_HombresMujeres.png)
+
+Esta gráfica de barras agrupadas desglosa el problema del desempleo en España con una lupa doble: nos muestra el porcentaje de paro separado no solo por hombres y mujeres, sino también por tramos de edad.
+
+Es una visualización clave para desmontar el "paro general" y ver la realidad de los más vulnerables. Por ejemplo, a simple vista destaca cómo el desempleo juvenil (de 16 a 19 años) se dispara radicalmente frente al resto, castigando además con mucha más dureza a las mujeres jóvenes.
+
+**🎛️ ¿Cómo interactuar con ella?**
+La gráfica cuenta con dos selectores a la derecha para que puedas explorar los datos a tu medida:
+
+- 🎚️ El viaje en el tiempo (Año): Puedes mover el deslizador del año o escribir uno en concreto (ej. 2025) para comprobar si la brecha de género está mejorando o empeorando con el paso del tiempo.
+
+- 📍 El filtro local (Comunidad Autónoma): Desmarca la casilla "(Todo)" y elige solo tu Comunidad Autónoma para descubrir si en tu región hay más paro juvenil o femenino que en la media nacional.
+
+
+
+2. **Impacto de la Inflación por Categoría de Gasto**
+
+![Tableau_02)](assets/Tableau_Inflaccion.png)
+
+Esta gráfica es el "termómetro" real de nuestros bolsillos. Nos muestra cómo han evolucionado los precios de las cosas que pagamos en el día a día (comida, luz, sanidad, ocio, etc.) desde el año 2002 hasta la actualidad.
+
+Para que sea súper fácil de leer, hemos aplicado un código de colores térmico: el color verde indica los años en los que los precios eran bajos y manejables, mientras que el rojo intenso funciona como una señal de alarma que marca cuándo los precios se han disparado. A simple vista, es imposible no notar la "ola roja" que asfixia categorías de primera necesidad (como Alimentos o Vivienda) en los últimos años, explicando visualmente por qué a las familias les cuesta cada vez más llegar a fin de mes, aunque sus sueldos hayan subido.
+
+**🎛️ ¿Cómo interactuar con ella?**
+
+- 🎚️ Monta tu propia cesta de la compra (Selector de categorías): En el menú de la derecha puedes marcar o desmarcar casillas para analizar solo los gastos que te interesen. ¿Quieres comparar si ha subido más la comida o la factura del teléfono (Comunicaciones)? Selecciona solo esas dos y descúbrelo.
+
+- 🔍 El dato exacto a un clic (Zoom-in): Si ves un bloque muy rojo (por ejemplo, los Alimentos en 2024) y quieres saber el dato preciso, solo tienes que pasar el ratón por encima de esa barra para que se despliegue una tarjeta con los valores exactos.
+
+
 
 ### 🗺️ Dashboard (Cuadro de Mando)
 
 El objetivo de este dashboard interactivo es ofrecer una visión integral y territorial de la realidad económica de los ciudadanos. En lugar de analizar métricas aisladas, este panel conecta el mercado laboral (empleo), los ingresos (salarios) y el coste de la vida (inflación) para entender el verdadero poder adquisitivo y la vulnerabilidad económica de la población.
 
 ![Tableau_Dashboard_01)](assets/Tableau_Dashboard_01.png)
+
+
 ![Tableau_Dashboard_02)](assets/Tableau_Dashboard_02.png)
 
 #### Gráficos seleccionados:

@@ -22,6 +22,7 @@
     <SortTagCleanup />
     <_.fcp.VConnDownstreamExtractsWithWarnings.true...VConnDownstreamExtractsWithWarnings />
     <WindowsPersistSimpleIdentifiers />
+    <WorksheetBackgroundTransparency />
     <ZoneBackgroundTransparency />
   </document-format-change-manifest>
   <preferences>
@@ -2847,7 +2848,7 @@
             <column caption='valor (T salarios.csv)' datatype='real' name='[valor (T_salarios.csv)]' role='dimension' type='ordinal' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[Action (Nombre)]'>
-            <groupfilter function='level-members' level='[nombre]' user:ui-action-filter='[Action1_74EDBE4ED5264B5CB49B2BC12CDD6059]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[nombre]' member='&quot;Andalucía&quot;' user:ui-action-filter='[Action1_74EDBE4ED5264B5CB49B2BC12CDD6059]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:nombre (tbl_indicador.csv):nk]'>
             <groupfilter function='member' level='[none:nombre (tbl_indicador.csv):nk]' member='&quot;Salario_Anual_Media&quot;' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
@@ -3601,10 +3602,10 @@
             <column caption='Valor' datatype='real' name='[valor]' role='dimension' type='ordinal' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[Action (Nombre)]'>
-            <groupfilter function='level-members' level='[nombre]' user:ui-action-filter='[Action1_74EDBE4ED5264B5CB49B2BC12CDD6059]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[nombre]' member='&quot;Andalucía&quot;' user:ui-action-filter='[Action1_74EDBE4ED5264B5CB49B2BC12CDD6059]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:anio:ok]'>
-            <groupfilter function='member' level='[none:anio:ok]' member='2008' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[none:anio:ok]' member='2025' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:grupo_edad:nk]'>
             <groupfilter function='union' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate'>
@@ -3652,7 +3653,7 @@
           </style-rule>
           <style-rule element='cell'>
             <format attr='width' field='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:grupo_edad:nk]' value='244' />
-            <format attr='width' field='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:sexo:nk]' value='125' />
+            <format attr='width' field='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:sexo:nk]' value='132' />
           </style-rule>
           <style-rule element='worksheet'>
             <format attr='display-field-labels' scope='cols' value='false' />
@@ -3712,13 +3713,14 @@
             <column caption='valor (T precios.csv)' datatype='real' name='[valor (T_precios.csv)]' role='dimension' type='ordinal' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[Action (Nombre)]'>
-            <groupfilter function='level-members' level='[nombre]' user:ui-action-filter='[Action1_74EDBE4ED5264B5CB49B2BC12CDD6059]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[nombre]' member='&quot;Andalucía&quot;' user:ui-action-filter='[Action1_74EDBE4ED5264B5CB49B2BC12CDD6059]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:categoria_gasto:nk]'>
             <groupfilter function='union' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate'>
-              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Comunicaciones&quot;' />
-              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Enseñanza&quot;' />
-              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Alimentos y bebidas no alcohólicas&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Bebidas alcohólicas y tabaco&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Sanidad&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Vivienda, agua, electricidad, gas y otros combustibles&quot;' />
             </groupfilter>
           </filter>
           <slices>
@@ -3856,9 +3858,9 @@
       </datasource-dependencies>
       <zones>
         <zone h='100000' id='4' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='98004' id='8' param='horz' type-v2='layout-flow' w='98960' x='520' y='998'>
-            <zone h='98004' id='6' type-v2='layout-basic' w='85315' x='520' y='998'>
-              <zone h='49002' id='3' name='Mapa' w='42655' x='520' y='998'>
+          <zone h='98002' id='8' param='horz' type-v2='layout-flow' w='98960' x='520' y='999'>
+            <zone h='98002' id='6' type-v2='layout-basic' w='85306' x='520' y='999'>
+              <zone h='48998' id='3' name='Mapa' w='42647' x='520' y='999'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -3866,7 +3868,7 @@
                   <format attr='margin' value='4' />
                 </zone-style>
               </zone>
-              <zone h='49002' id='12' name='12_InflaccionCategoriaGasto' w='42657' x='520' y='50000'>
+              <zone h='49004' id='12' name='12_InflaccionCategoriaGasto' w='42649' x='520' y='49997'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -3874,7 +3876,7 @@
                   <format attr='margin' value='4' />
                 </zone-style>
               </zone>
-              <zone h='49002' id='15' name='11_ParoHombresMujeres_EdadAnio' w='42660' x='43175' y='998'>
+              <zone h='48998' id='15' name='11_ParoHombresMujeres_EdadAnio' w='42659' x='43167' y='999'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -3882,7 +3884,7 @@
                   <format attr='margin' value='4' />
                 </zone-style>
               </zone>
-              <zone h='49002' id='19' name='01_EvolucionSalarioMedioAnual_CCAA' w='42658' x='43177' y='50000'>
+              <zone h='49004' id='19' name='01_EvolucionSalarioMedioAnual_CCAA' w='42657' x='43169' y='49997'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -3891,8 +3893,8 @@
                 </zone-style>
               </zone>
             </zone>
-            <zone fixed-size='210' h='98004' id='7' is-fixed='true' param='vert' type-v2='layout-flow' w='13645' x='85835' y='998'>
-              <zone fixed-size='112' h='14963' id='16' is-fixed='true' mode='slider' name='11_ParoHombresMujeres_EdadAnio' param='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:anio:ok]' type-v2='filter' w='13645' x='85835' y='998'>
+            <zone fixed-size='210' h='98002' id='7' is-fixed='true' param='vert' type-v2='layout-flow' w='13654' x='85826' y='999'>
+              <zone fixed-size='112' h='14982' id='16' is-fixed='true' mode='slider' name='11_ParoHombresMujeres_EdadAnio' param='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:anio:ok]' type-v2='filter' w='13654' x='85826' y='999'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -3900,7 +3902,7 @@
                   <format attr='margin' value='4' />
                 </zone-style>
               </zone>
-              <zone fixed-size='625' h='78928' id='13' is-fixed='true' name='12_InflaccionCategoriaGasto' param='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:categoria_gasto:nk]' type-v2='filter' w='13645' x='85835' y='15961'>
+              <zone fixed-size='625' h='79026' id='13' is-fixed='true' name='12_InflaccionCategoriaGasto' param='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:categoria_gasto:nk]' type-v2='filter' w='13654' x='85826' y='15981'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -3936,8 +3938,46 @@
       </devicelayouts>
       <simple-id uuid='{DBA16F66-C946-4563-BD82-5622A8BD9907}' />
     </dashboard>
+    <dashboard name='Storytelling (Punto 6)' type='storyboard'>
+      <layout-options>
+        <title>
+          <formatted-text>
+            <run bold='true' fontcolor='#76b7b2' fontname='BellCent BdList BT' fontsize='20'>Storytelling</run>
+          </formatted-text>
+        </title>
+      </layout-options>
+      <style />
+      <size sizing-mode='automatic' />
+      <zones>
+        <zone h='100000' id='2' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='98002' id='1' param='vert' removable='false' type-v2='layout-flow' w='98960' x='520' y='999'>
+            <zone h='5618' id='3' type-v2='title' w='98960' x='520' y='999' />
+            <zone h='12609' id='4' is-fixed='true' paired-zone-id='5' removable='false' type-v2='flipboard-nav' w='98960' x='520' y='6617' />
+            <zone h='79775' id='5' paired-zone-id='4' removable='false' type-v2='flipboard' w='98960' x='520' y='19226'>
+              <flipboard active-id='1' nav-type='caption' show-nav-arrows='true'>
+                <story-points>
+                  <story-point captured-sheet='01_EvolucionSalarioMedioAnual_CCAA' id='1' />
+                </story-points>
+              </flipboard>
+            </zone>
+          </zone>
+          <zone-style>
+            <format attr='border-color' value='#000000' />
+            <format attr='border-style' value='none' />
+            <format attr='border-width' value='0' />
+            <format attr='margin' value='8' />
+          </zone-style>
+        </zone>
+        <zone flipboard-zone-id='5' h='3995' id='6' story-point-id='1' type-v2='text' w='6502' x='82510' y='30212'>
+          <formatted-text>
+            <run>hhh</run>
+          </formatted-text>
+        </zone>
+      </zones>
+      <simple-id uuid='{E0BC3EBD-83E6-42F3-A285-EEF271D6D248}' />
+    </dashboard>
   </dashboards>
-  <windows pres-mode='true' source-height='219'>
+  <windows source-height='219'>
     <window class='worksheet' name='01_EvolucionSalarioMedioAnual_CCAA'>
       <cards>
         <edge name='left'>
@@ -4247,7 +4287,7 @@
       </cards>
       <simple-id uuid='{50ECAD9E-9227-46BF-8A85-A93B3FEE9E76}' />
     </window>
-    <window class='worksheet' name='12_InflaccionCategoriaGasto'>
+    <window class='worksheet' maximized='true' name='12_InflaccionCategoriaGasto'>
       <cards>
         <edge name='left'>
           <strip size='214'>
@@ -4279,24 +4319,6 @@
       </viewpoint>
       <simple-id uuid='{300C414B-ADFC-4F07-BB12-4F41DE0812D4}' />
     </window>
-    <window class='dashboard' maximized='true' name='Dashboard (Punto 5)'>
-      <viewpoints>
-        <viewpoint name='01_EvolucionSalarioMedioAnual_CCAA'>
-          <zoom type='entire-view' />
-        </viewpoint>
-        <viewpoint name='11_ParoHombresMujeres_EdadAnio'>
-          <zoom type='entire-view' />
-        </viewpoint>
-        <viewpoint name='12_InflaccionCategoriaGasto'>
-          <zoom type='entire-view' />
-        </viewpoint>
-        <viewpoint name='Mapa'>
-          <zoom type='entire-view' />
-        </viewpoint>
-      </viewpoints>
-      <active id='3' />
-      <simple-id uuid='{359E69A6-BE07-4A6E-9B0E-CE19C6A7A0DC}' />
-    </window>
     <window class='worksheet' name='Mapa'>
       <cards>
         <edge name='left'>
@@ -4319,6 +4341,29 @@
         </edge>
       </cards>
       <simple-id uuid='{4E52CB9D-414E-46CC-982B-F0819CC8DF9A}' />
+    </window>
+    <window class='dashboard' name='Dashboard (Punto 5)'>
+      <viewpoints>
+        <viewpoint name='01_EvolucionSalarioMedioAnual_CCAA'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='11_ParoHombresMujeres_EdadAnio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='12_InflaccionCategoriaGasto'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Mapa'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='3' />
+      <simple-id uuid='{359E69A6-BE07-4A6E-9B0E-CE19C6A7A0DC}' />
+    </window>
+    <window class='dashboard' name='Storytelling (Punto 6)'>
+      <viewpoints />
+      <active id='-1' />
+      <simple-id uuid='{8C4CE5BC-FEE6-405D-BF15-2BF920092385}' />
     </window>
   </windows>
 </workbook>
