@@ -262,7 +262,28 @@ Utilizaremos la herramienta de Business Intelligente (BI) **Tableau** para gener
 #### Carga de archivos:
 Importaremos al programa de Tableau los CSV que procesamos anteriormente con Polars
 
-#### Conexión a la BBDD:  
+#### Conexión a la BBDD: 
+
+
+### 🗺️ Dashboard (Cuadro de Mando)
+
+El objetivo de este dashboard interactivo es ofrecer una visión integral y territorial de la realidad económica de los ciudadanos. En lugar de analizar métricas aisladas, este panel conecta el mercado laboral (empleo), los ingresos (salarios) y el coste de la vida (inflación) para entender el verdadero poder adquisitivo y la vulnerabilidad económica de la población.
+
+![Tableau_Dashboard_01)](assets/Tableau_Dashboard_01.png)
+![Tableau_Dashboard_02)](assets/Tableau_Dashboard_02.png)
+
+#### Gráficos seleccionados:
+1. **El Mapa de España (El filtro principal del panel):**
+España es muy diferente según donde vivas. Si haces clic en tu Comunidad Autónoma en el mapa, las otras tres gráficas se actualizan al instante para mostrarte en exclusiva la realidad de tu zona.
+
+2. **El Paro por Edad y Sexo:**
+Nos enseña visualmente quiénes son los más vulnerables. Permite ver de un vistazo si el problema lo tienen más los jóvenes para encontrar su primer empleo, o si existe una brecha clara entre hombres y mujeres.
+
+3. **Evolución del Salario Medio:**
+Representa "el dinero que entra en casa". Nos sirve para ver si los salarios están creciendo o si, por el contrario, llevan años estancados.
+
+4. **La Inflación por Categorías:**
+Representa "el dinero que sale de casa". Es la pareja perfecta para la gráfica del salario: de nada sirve alegrarnos porque el sueldo suba un poco, si al lado vemos que el precio de los alimentos o la luz ha subido el doble. Esto explica por qué a la gente le cuesta más llegar a fin de mes.
 ___
 
 ## 🚀 Instalación y Uso
