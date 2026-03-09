@@ -3685,7 +3685,7 @@
       <layout-options>
         <title>
           <formatted-text>
-            <run bold='true' fontcolor='#59a14f' fontname='BellCent BdList BT'>Impacto de la Inflación por Categoría de Gasto</run>
+            <run bold='true' fontcolor='#59a14f' fontname='BellCent BdList BT'>Impacto de la Inflacción por Categoría de Gasto</run>
           </formatted-text>
         </title>
       </layout-options>
@@ -3718,7 +3718,9 @@
           <filter class='categorical' column='[federated.1tpfz920wkts6z12uvpf31dbhcgq].[none:categoria_gasto:nk]'>
             <groupfilter function='union' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate'>
               <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Alimentos y bebidas no alcohólicas&quot;' />
-              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Bebidas alcohólicas y tabaco&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Comunicaciones&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Enseñanza&quot;' />
+              <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Otros bienes y servicios&quot;' />
               <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Sanidad&quot;' />
               <groupfilter function='member' level='[none:categoria_gasto:nk]' member='&quot;Vivienda, agua, electricidad, gas y otros combustibles&quot;' />
             </groupfilter>
