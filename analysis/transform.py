@@ -7,7 +7,6 @@ import sys
 import traceback
 
 
-
 # Aseguramos que Python encuentre la carpeta 'src' subiendo un nivel
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -80,30 +79,21 @@ def process_data_polars():
 
         # Obtenemos las tablas completas de la bbdd
         query_t_salaries = """SELECT * FROM T_salarios"""
-        df_salaries = pl.read_database(
-            query=query_t_salaries, connection=db_conn
-        )
+        df_salaries = pl.read_database(query=query_t_salaries, connection=db_conn)
         query_t_prices = """SELECT * FROM T_precios"""
-        df_prices = pl.read_database(
-            query=query_t_prices, connection=db_conn
-        )
+        df_prices = pl.read_database(query=query_t_prices, connection=db_conn)
         query_t_employment = """SELECT * FROM T_empleo"""
         df_employment = pl.read_database(
             query=query_t_employment, connection=db_conn, infer_schema_length=100000
         )
         query_tbl_geography = """SELECT * FROM tbl_geografia"""
-        df_geography= pl.read_database(
-            query=query_tbl_geography, connection=db_conn
-        )
+        df_geography = pl.read_database(query=query_tbl_geography, connection=db_conn)
         query_tbl_indicator = """SELECT * FROM tbl_indicador"""
-        df_indicator = pl.read_database(
-            query=query_tbl_indicator, connection=db_conn
-        )
+        df_indicator = pl.read_database(query=query_tbl_indicator, connection=db_conn)
         query_tbl_period = """SELECT * FROM tbl_periodo"""
         df_period = pl.read_database(
             query=query_tbl_period, connection=db_conn, infer_schema_length=100000
         )
-
 
         # =======================================================================
         # FASE B: TRANSFORMACIÓN Y ANÁLISIS EN MEMORIA (POLARS)
@@ -362,6 +352,33 @@ def process_data_polars():
         )
 
         # =======================================================================
+        # FASE B.2: CREACIÓN DE DATASETS ESPECÍFICOS PARA MACHINE LEARNING
+        # =======================================================================
+        print("Preparando datasets para Machine Learning...")
+
+        # A) Precio de la Vivienda (IPV) por Comunidad Autónoma
+        df_regional_hpi = (
+            df_master_prices
+            .filter(
+                (pl.col("indicador") == "IPV_Indice") 
+                & (pl.col("comunidad") != "Total Nacional") 
+                & (pl.col("precio").is_not_null())
+            )
+            .group_by(["comunidad", "anio"])
+            .agg(pl.col("precio").mean().alias("precio_vivienda"))
+        )
+
+        # B) DATASET BASE: Cruzamos Vivienda + Salarios + Paro a nivel regional + IPC
+        df_ml = (
+            df_regional_hpi
+            .join(df_salaries_regions.filter(pl.col("comunidad") != "Total Nacional"), on=["comunidad", "anio"], how="inner")
+            .join(df_annual_unemployment, on=["comunidad", "anio"], how="inner")
+        ).select([
+            "anio", "comunidad", "precio_vivienda", "salario_medio", "tasa_paro_media"
+        ])
+
+
+        # =======================================================================
         # FASE C: EXPORTACIÓN A CSV Y PARQUET
         # =======================================================================
         print("\nExportando resultados a las carpetas CSV y Parquet.")
@@ -389,7 +406,8 @@ def process_data_polars():
             "T_empleo": df_employment,
             "tbl_geografia": df_geography,
             "tbl_periodo": df_period,
-            "tbl_indicador": df_indicator
+            "tbl_indicador": df_indicator,
+            "ML": df_ml,
         }
 
         for file_name, df in datasets.items():
