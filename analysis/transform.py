@@ -356,27 +356,45 @@ def process_data_polars():
         # =======================================================================
         print("Preparando datasets para Machine Learning...")
 
-        # A) Precio de la Vivienda (IPV) por Comunidad Autónoma
+        # A.1) Precio de la Vivienda (IPV) por Comunidad Autónoma
         df_regional_hpi = (
-            df_master_prices
-            .filter(
-                (pl.col("indicador") == "IPV_Indice") 
-                & (pl.col("comunidad") != "Total Nacional") 
+            df_master_prices.filter(
+                (pl.col("indicador") == "IPV_Indice")
+                & (pl.col("comunidad") != "Total Nacional")
                 & (pl.col("precio").is_not_null())
             )
             .group_by(["comunidad", "anio"])
             .agg(pl.col("precio").mean().alias("precio_vivienda"))
         )
 
+        # A.2) IPC por categorías y por Comunidad Autónoma
+        df_cpi_categories = (
+            df_master_prices
+            .filter(
+                (pl.col("indicador") == "IPC_Indice") 
+                & (pl.col("comunidad") != "Total Nacional") 
+                & (pl.col("categoria_gasto") != "IPC General") # Excluimos el general
+                & (pl.col("precio").is_not_null())
+            )
+            .group_by(["anio", "comunidad", "categoria_gasto"])
+            .agg(pl.col("precio").mean().alias("precio"))
+            # El PIVOT convierte cada categoría de gasto en una columna distinta
+            .pivot(values="precio", index=["comunidad", "anio"], on="categoria_gasto")
+        )
+
         # B) DATASET BASE: Cruzamos Vivienda + Salarios + Paro a nivel regional + IPC
         df_ml = (
-            df_regional_hpi
-            .join(df_salaries_regions.filter(pl.col("comunidad") != "Total Nacional"), on=["comunidad", "anio"], how="inner")
+            df_regional_hpi.join(
+                df_salaries_regions.filter(pl.col("comunidad") != "Total Nacional"),
+                on=["comunidad", "anio"],
+                how="inner",
+            )
             .join(df_annual_unemployment, on=["comunidad", "anio"], how="inner")
-        ).select([
-            "anio", "comunidad", "precio_vivienda", "salario_medio", "tasa_paro_media"
-        ])
+            .join(df_cpi_categories, on=["comunidad", "anio"], how="inner")
+        )
 
+        columnas_a_mantener = [col for col in df_ml.columns if "Vivienda" not in col]
+        df_ml = df_ml.select(columnas_a_mantener)
 
         # =======================================================================
         # FASE C: EXPORTACIÓN A CSV Y PARQUET
