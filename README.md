@@ -262,7 +262,17 @@ Utilizaremos la herramienta de Business Intelligente (BI) **Tableau** para gener
 #### Carga de archivos:
 Importaremos al programa de Tableau los CSV que procesamos anteriormente con Polars
 
-#### Conexión a la BBDD: 
+#### Conexión a la BBDD (Simulación de arquitectura):
+Dado que la versión de Tableau Public presenta limitaciones nativas para conectarse directamente a gestores de bases de datos locales, hemos optado por "simular" esta conexión. Para ello, hemos utilizado los CSV finales exportados desde la extracción en Python con Polars, realizando los *joins* y cruces del modelo de datos de forma relacional directamente en el panel "Fuente de datos" de Tableau.
+
+![Tableau_diagrama](assets/diagrama_tableau.png)
+
+#### Consideraciones Técnicas y Troubleshooting:
+Durante la ingesta de datos en Tableau, nos enfrentamos a un par de retos de formato muy comunes al integrar Python con herramientas de BI, los cuales resolvimos así:
+
+* **El parseo de decimales**: Por defecto, Tableau en español espera que los números decimales estén separados por comas (`,`). Sin embargo, nuestros datos procesados en Python siguen el estándar internacional usando el punto (`.`). Para evitar que Tableau leyera los precios o porcentajes como texto (o ignorara los decimales), tuvimos que especificar la configuración regional en inglés al importar los datos para que reconociera correctamente el formato numérico.
+
+* **Delimitadores del CSV**: Al insertar algunos de los datasets, Tableau no detectó automáticamente las comas como separadores de columnas, amontonando toda la información en una sola fila. Lo solucionamos accediendo a las propiedades del archivo de texto dentro de Tableau y forzando manualmente el uso de la coma (`,`) como delimitador de campo.
 
 ### 📊 Visualizaciones individuales
 Con el objetivo de experimentar la creación de gráficas y aplicar parte de los muchos filtros y funciones que tiene la herramienta Tableau hemos replicado los 9 gráficos que creamos con Plotly. 
@@ -301,6 +311,17 @@ Para que sea súper fácil de leer, hemos aplicado un código de colores térmic
 - 🔍 El dato exacto a un clic (Zoom-in): Si ves un bloque muy rojo (por ejemplo, los Alimentos en 2024) y quieres saber el dato preciso, solo tienes que pasar el ratón por encima de esa barra para que se despliegue una tarjeta con los valores exactos.
 
 
+3. **Salario Medio Anual por Comunidad Autónoma (Mapa de Calor Regional)**
+
+![Tableau_MapaSalarios)](assets/Tableau_MapaSalarios.png)
+
+Esta gráfica nos muestra, de un vistazo, cómo se reparte el dinero por toda España. Cada Comunidad Autónoma se tiñe de un color azul diferente (de claro a oscuro) para representar su salario medio anual.
+
+Es una visualización crucial para entender las desigualdades territoriales. La "media nacional" esconde realidades muy dispares, y este mapa las saca a la luz de forma instantánea. Los colores más oscuros marcan las zonas donde se cobra más (como Madrid, País Vasco o Navarra), mientras que los más claros nos señalan las regiones con salarios más modestos. Esto nos permite analizar cómo el lugar de residencia impacta directamente en la capacidad de las familias para afrontar el coste de la vida.
+
+**🎛️ ¿Cómo interactuar con ella?**
+
+- 🔍 El dato exacto a un clic (Zoom-in): Si quieres saber el salario medio preciso de tu región, solo tienes que pasar el ratón por encima de esa Comunidad Autónoma para que se despliegue una tarjeta (Tooltip) con el valor exacto y el año.
 
 ### 🗺️ Dashboard (Cuadro de Mando)
 
