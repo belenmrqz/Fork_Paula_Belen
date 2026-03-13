@@ -4,80 +4,145 @@
 # precio vivienda 
 
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Herramientas de Machine Learning
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+import plotly.express as px
+import os
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# CARGA Y PREPARACIÓN DE DATOS   
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-'''
-Antes de comenzar, nos aseguraremos de que los datos están 
-cargados correcatmente para útilizar aquellos que necesitamos
-'''
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 1. CARGA Y PREPARACIÓN DE DATOS
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+dataframe = pd.read_csv('data_output/csv/ML.csv')
 
-dataframe = pd.read_csv('data_output/csv/ML.csv')    # cargar archivo
-print("INFORMACIÓN DEL DATASET")
-print(dataframe.info())
-print("\nPRIMERAS 5 FILAS")
-print(dataframe.head())
+ultimo_anio = dataframe['anio'].max() # Último año
+df_foto = dataframe[dataframe['anio'] == ultimo_anio].copy() # dataframe con el último año
 
-'''
-INFORMACIÓN DEL DATASET
-<class 'pandas.core.frame.DataFrame'>
-RangeIndex: 272 entries, 0 to 271
-Data columns (total 5 columns):
- #   Column           Non-Null Count  Dtype
----  ------           --------------  -----
- 0   anio             272 non-null    int64
- 1   comunidad        272 non-null    object
- 2   precio_vivienda  272 non-null    float64
- 3   salario_medio    272 non-null    float64
- 4   tasa_paro_media  272 non-null    float64
-dtypes: float64(3), int64(1), object(1)
-memory usage: 10.8+ KB
-
-PRIMERAS 5 FILAS
-   anio                comunidad  precio_vivienda  salario_medio  tasa_paro_media
-0  2018                Andalucía        111.37050   21730.240000          22.9850
-1  2012                Andalucía        106.26725   20770.716667          34.3525
-2  2022  Asturias, Principado de        126.18175   26704.030000          12.5125
-3  2019  Asturias, Principado de        110.56050   24882.073333          14.1925
-4  2023               País Vasco        136.31625   33381.403333           7.7350
-'''
-
-# Apartaremos en un dataframe las variables que necesitamos para nuestro clustering
-# Debemos escalar los datos ya que la tasa se paro es un porcentaje y el precio de 
-# la vivienda y la tasa de paro está en euros
-
+# Aislar variables y escalar
 variables = ['salario_medio', 'precio_vivienda', 'tasa_paro_media']
-datos = dataframe[variables]
+datos = df_foto[variables]
 datos_escalados = StandardScaler().fit_transform(datos)
-dataframe_escalado = pd.DataFrame(datos_escalados, columns=variables)
-
-print("\nDATOS SIN ESCALAR")
-print(datos.head())
-
-print("\nDATOS DESPUES DE ESCALAR")
-print(dataframe_escalado.head())
 
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ALGORITMO K-MEANS 
-# Algoritmo de agrupamiento (clustering) más famoso del mundo   
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Creación del algoritmo que buscará 3 cluster (grupos)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2. ALGORITMO K-MEANS
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 kmeans = KMeans(n_clusters=3, random_state=42)
+df_foto['Cluster'] = kmeans.fit_predict(datos_escalados)
 
-# Entrenamiento
-clusters_asignados = kmeans.fit_predict(datos_escalados)
-dataframe['Cluster'] = clusters_asignados
 
-print("\nRESULTADO DE LA INTELIGENCIA ARTIFICIAL")
-print(dataframe[['comunidad', 'anio', 'salario_medio', 'Cluster']].head(10))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 3. INTELIGENCIA DE COLORES Y FORMATO PARA LA GRÁFICA
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+estadisticas = df_foto.groupby('Cluster')[['salario_medio', 'tasa_paro_media']].mean()
+estadisticas['Puntuacion'] = estadisticas['salario_medio'] - (estadisticas['tasa_paro_media'] * 500)
+estadisticas = estadisticas.sort_values(by='Puntuacion', ascending=False)
+
+grupo_verde = estadisticas.index[0]
+grupo_amarillo = estadisticas.index[1]
+grupo_rojo = estadisticas.index[2]
+
+diccionario_nombres = {
+    grupo_verde: '🟢 Óptima (Alto Salario, Bajo Paro)',
+    grupo_amarillo: '🟡 Intermedia (Transición)',
+    grupo_rojo: '🔴 Vulnerable (Bajo Salario, Alto Paro)'
+}
+
+mapa_colores = {
+    '🟢 Óptima (Alto Salario, Bajo Paro)': '#2ca02c', 
+    '🟡 Intermedia (Transición)': '#ffc107',          
+    '🔴 Vulnerable (Bajo Salario, Alto Paro)': '#d62728' 
+}
+
+df_foto['Estado Financiero'] = df_foto['Cluster'].map(diccionario_nombres)
+
+# Textos para el hover 
+df_foto['Salario'] = df_foto['salario_medio'].round(0).astype(int).astype(str) + " €"
+df_foto['Paro'] = df_foto['tasa_paro_media'].round(1).astype(str) + " %"
+df_foto['Índice Vivienda'] = df_foto['precio_vivienda'].round(1).astype(str) + " (Base 100)"
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 4. PREPARAR NOMBRES PARA EL MAPA 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Este es el mapeo EXACTO que usa el archivo geojson de click_that_hood
+diccionario_ccaa = {
+    'Andalucía': 'Andalucia',
+    'Aragón': 'Aragon',
+    'Asturias, Principado de': 'Asturias', 
+    'Balears, Illes': 'Baleares',
+    'Canarias': 'Canarias',
+    'Cantabria': 'Cantabria',
+    'Castilla y León': 'Castilla-Leon',          
+    'Castilla - La Mancha': 'Castilla-La Mancha',
+    'Cataluña': 'Cataluña',                       
+    'Comunitat Valenciana': 'Valencia',           
+    'Extremadura': 'Extremadura',
+    'Galicia': 'Galicia',
+    'Madrid, Comunidad de': 'Madrid',
+    'Murcia, Región de': 'Murcia',
+    'Navarra, Comunidad Foral de': 'Navarra', 
+    'País Vasco': 'Pais Vasco',                   
+    'Rioja, La': 'La Rioja'
+}
+df_foto['Nombre_Mapa'] = df_foto['comunidad'].map(diccionario_ccaa)
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 5. CREAR EL GRÁFICO HTML INTERACTIVO
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+url_mapa = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/spain-communities.geojson"
+
+fig = px.choropleth_map(
+    df_foto,
+    geojson=url_mapa, 
+    featureidkey="properties.name", 
+    locations="Nombre_Mapa",        
+    color="Estado Financiero",
+    color_discrete_map=mapa_colores,
+    hover_name="comunidad",
+    hover_data={
+        "Nombre_Mapa": False, 
+        "Estado Financiero": False, 
+        "Salario": True, 
+        "Paro": True,
+        "precio_vivienda": False, 
+        "Índice Vivienda": True          
+    },
+    map_style="carto-positron", 
+    zoom=4.8, 
+    center={"lat": 40.0, "lon": -3.0}, 
+    title=f"Radiografía del Poder Adquisitivo en España ({ultimo_anio})<br><sub>Agrupación K-Means de Comunidades Autónomas.</sub>"
+)
+
+# Ajustes visuales
+fig.update_layout(
+    margin={"r":0,"t":80,"l":0,"b":0},
+    title_font_size=20,
+    title_x=0.5, 
+    legend_title_text='Poder Adquisitivo Real',
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=0.02,
+        xanchor="center",
+        x=0.5,
+        bgcolor="rgba(255, 255, 255, 0.9)",
+        bordercolor="Black", 
+        borderwidth=1
+    )
+)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 6. GUARDAR EL GRÁFICO  
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+carpeta_salida = r"C:\Users\BelenML\github\SBD_Act1.1\data_output\graphics\clustering_graphics"
+os.makedirs(carpeta_salida, exist_ok=True)
+archivo_salida = os.path.join(carpeta_salida, 'mapa_interactivo_ccaa.html')
+
+fig.write_html(archivo_salida)
+
+print(f"Mapa de regiones creado con éxito en {archivo_salida} ")
