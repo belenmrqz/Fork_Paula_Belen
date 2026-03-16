@@ -344,6 +344,42 @@ Representa "el dinero que entra en casa". Nos sirve para ver si los salarios est
 
 4. **La Inflación por Categorías:**
 Representa "el dinero que sale de casa". Es la pareja perfecta para la gráfica del salario: de nada sirve alegrarnos porque el sueldo suba un poco, si al lado vemos que el precio de los alimentos o la luz ha subido el doble. Esto explica por qué a la gente le cuesta más llegar a fin de mes.
+
+
+
+___
+## Modelado de datos
+Dada la profuncidad de los datos hemos decidio realizar dos tipos de modelado de datos que permita el uso de algoritmos:
+- Clustering
+- Regression
+
+### Parte 1: Clustering 
+Hemos selecionado variables como la Tasa de paro, el Precio de la Vivienda y el Salario medio de cada Comunidad Autonoma con el objetivo de descubrir la salud financiera real de los ciudadanos de España. 
+A partir de un modelo de base de datos estrella, hemos consolidado un dataset para obtener una visión unificada por Comunidad Autonoma y Año, nos hemos centrado en 2023.
+
+#### **Modelado Analítico - Clustering K-Means**
+Para evitar sesgos geográficos preconcebidos (el clásico "Norte rico vs. Sur pobre"), hemos delegado la segmentación a un algoritmo de aprendizaje no supervisado (*K-Means con k=3*).
+
+- **Escalado de Datos (StandardScaler):** Antes de entrenar el modelo, era neceario estandarizar las variables. El Salario se mide en miles de euros, mientras que el Paro es un porcentaje. Sin un escalado previo, el algoritmo habría dado un peso absoluto al Salario, ignorando el impacto del desempleo. Al usar StandardScaler, igualamos la varianza de todas las métricas centrando su media en 0.
+
+- **Nota sobre la Vivienda:** El coste de la vivienda no se introdujo en euros absolutos, sino utilizando el Índice de Precios de la Vivienda (*Base 100*). Esto es crucial porque permite al algoritmo medir la inflación y el encarecimiento inmobiliario, penalizando a las regiones donde el coste de vida se dispara respecto a la base estadística.
+
+#### **Resultados**
+La Inteligencia Artificial ha dividido España en tres realidades socioeconómicas distintas:
+
+![Clustering_01)](assets/Clustering_01.png)
+
+- **🟢 Grupo Óptimo (Verde):** Regiones con los salarios más altos del país y tasas de paro controladas. Sin embargo, el modelo detecta que estas zonas (como Madrid o País Vasco) sufren la trampa del alto coste de vida, con los IPV más disparados del país.
+
+- **🟡 Grupo Intermedio (Amarillo):** Zonas de transición. Presentan un equilibrio donde, si bien los salarios no son los más altos de España, el precio de la vivienda está más contenido, ofreciendo un poder adquisitivo real competitivo.
+
+- **🔴 Grupo Vulnerable (Rojo):** Regiones fuertemente penalizadas por el modelo debido a una altísima tasa de paro estructural combinada con salarios por debajo de la media nacional. Aquí, la dificultad para acceder al mercado laboral asfixia la economía familiar.
+
+Para la presentación de los resultados, se ha desarrollado un mapa de coropletas interactivo utilizando la librería Plotly.js
+
+
+
+### Parte 2: Regression
 ___
 
 ## 🚀 Instalación y Uso
