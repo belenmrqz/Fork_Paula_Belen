@@ -139,14 +139,21 @@ El código se organiza separando claramente la configuración, la lógica de ext
 ├── 📁 analysis              # FASE 2 y 3: PREPARACIÓN Y VISUALIZACIÓN
 │   ├── 📄 transform.py      # Script de Polars (Deflactación, cruces, agregaciones).
 │   └── 📄 visualize.py      # Script de Plotly (Generación de HTMLs interactivos).
+├── 📁 models_training       # FASE 4: MACHINE LEARNING (MODELADO PREDICTIVO)
+│   ├── 📄 clustering.py     # Modelo K-Means para segmentación socioeconómica (Regiones).
+│   └── 📄 regression.py     # Torneo de modelos (AutoML) para predecir el Precio de la Vivienda.
 ├── 📁 data_output           # CAPA ORO: Resultados finales
-│   ├── 📁 csv               # Datasets limpios (.csv)
-│   ├── 📁 parquet           # Datasets comprimidos (.parquet)
-│   ├── 📁 graphics          # Gráficos interactivos de Plotly (.html)
+│   ├── 📁 csv               # Datasets limpios (.csv) listos para ML y Tableau.
+│   ├── 📁 parquet           # Datasets comprimidos y optimizados (.parquet).
+│   ├── 📁 graphics          # Gráficos interactivos de Plotly exportados en .html.
 │   └── 📄 index.html        # Dashboard web interactivo para navegar por los gráficos.
-├── 📄 proyecto_datos.db     # Base de datos resultante.
+├── 📁 assets                # Imágenes, capturas y recursos estáticos para el README.
+├── 📄 Actividad_3.2...twbx  # Cuadro de mando interactivo empaquetado (Tableau).
+├── 📄 proyecto_datos.db     # Base de datos local resultante (SQLite).
+├── 📄 pyproject.toml        # Configuración moderna del proyecto y gestor de paquetes.
 ├── 📄 requirements.txt      # Dependencias bloqueadas con Hashes de seguridad (uv).
-└── 📄 uv.lock               # Archivo de bloqueo de versiones.
+├── 📄 uv.lock               # Archivo de bloqueo para entornos reproducibles.
+└── 📄 README.md             # Documentación principal y conclusiones del proyecto.
 ```
 
 
@@ -349,9 +356,9 @@ Representa "el dinero que sale de casa". Es la pareja perfecta para la gráfica 
 
 ___
 ## Modelado de datos
-Dada la profuncidad de los datos hemos decidio realizar dos tipos de modelado de datos que permita el uso de algoritmos:
+Dada la profundidad de los datos hemos decidido realizar dos tipos de modelado de datos que permita el uso de algoritmos:
 - Clustering
-- Regression
+- Regresion
 
 ### Parte 1: Clustering 
 Hemos selecionado variables como la Tasa de paro, el Precio de la Vivienda y el Salario medio de cada Comunidad Autonoma con el objetivo de descubrir la salud financiera real de los ciudadanos de España. 
@@ -367,7 +374,7 @@ Para evitar sesgos geográficos preconcebidos (el clásico "Norte rico vs. Sur p
 #### **Resultados**
 La Inteligencia Artificial ha dividido España en tres realidades socioeconómicas distintas:
 
-![Clustering_01)](assets/Clustering_01.png)
+![Clustering_01](assets/Clustering_01.png)
 
 - **🟢 Grupo Óptimo (Verde):** Regiones con los salarios más altos del país y tasas de paro controladas. Sin embargo, el modelo detecta que estas zonas (como Madrid o País Vasco) sufren la trampa del alto coste de vida, con los IPV más disparados del país.
 
@@ -379,8 +386,51 @@ Para la presentación de los resultados, se ha desarrollado un mapa de coropleta
 
 
 
-### Parte 2: Regression
-___
+### Parte 2: Regresión (Predicción del Precio de la Vivienda)
+Mientras que el Clustering nos ha permitido entender la estructura socioeconómica actual, el objetivo de esta segunda fase es predictivo: ¿Podemos estimar el Índice de Precios de la Vivienda (IPV) basándonos en el entorno económico (salarios, inflación, tasas de paro) de una región? 
+Dado que nuestro objetivo es predecir una cifra exacta (el precio de la vivienda) y no simplemente agrupar datos, hemos diseñado un proceso analítico basado en modelos de Regresión.
+
+#### Preprocesamiento y Prevención de Fugas (Data Leakage)
+Antes de entrenar a los modelos, preparamos los datos aplicando técnicas fundamentales para asegurar la honestidad y viabilidad del algoritmo:
+* **Selección de Variables (Feature Selection)**: Para predecir el IPV, utilizamos como predictores el salario medio, las tasas de paro, la comunidad autónoma y el IPC desglosado por categorías. Crucialmente, **eliminamos la categoría de IPC correspondiente a la Vivienda** del conjunto de entrenamiento. Incluirla habría provocado un grave caso de *Data Leakage*, ya que el modelo habría aprendido a predecir el coste de la vivienda usando una variable que ya contiene esa misma información, invalidando la predicción en el mundo real.
+
+* **Target Encoding seguro**: Para transformar la variable categórica "Comunidad Autónoma" en un valor numérico útil para el algoritmo, utilizamos `TargetEncoder`. Para garantizar la integridad del modelo y evitar fugas de información, el codificador se ajustó **exclusivamente sobre el conjunto de entrenamiento (Train)** y posteriormente se aplicó al conjunto de prueba (Test).
+
+* **Escalado (StandardScaler)**: Al igual que en el clustering, estandarizamos las variables numéricas para que algoritmos sensibles a las distancias o a la magnitud de los datos (como K-NN o Ridge) compitieran en igualdad de condiciones.
+
+#### Modelado Analítico - Comparación de Regresores (AutoML)
+En lugar de conformarnos con un solo algoritmo, desarrollamos un sistema automatizado para comparar cuatro modelos de distinta naturaleza matemática:
+1. Regresión Ridge (Lineal Regularizada)
+2. K-Nearest Neighbors (Basado en instancias)
+3. Random Forest (Ensamblado Bagging)
+4. Gradient Boosting (Ensamblado Boosting)
+
+Para asegurar que cada algoritmo daba su máximo potencial sin caer en el sobreajuste (*overfitting*), utilizamos **GridSearchCV**. En lugar de utilizar los ajustes por defecto de la librería, diseñamos manualmente espacios de búsqueda de hiperparámetros específicos para cada modelo (afinando, por ejemplo, la fuerza de regularización en Ridge, el número de vecinos y pesos en K-NN, o la profundidad máxima, número de árboles y tasas de aprendizaje en los métodos de ensamblado). Esta herramienta probó todas las combinaciones utilizando **Validación Cruzada** (*Cross-Validation* con `cv=5`), seleccionando al campeón basándose en su métrica $R^2$.
+
+#### Resultados e Interpretación Visual
+El modelo ganador absoluto fue el **Gradient Boosting Regressor**, demostrando una capacidad sobresaliente para capturar las relaciones complejas y no lineales entre la economía y el mercado inmobiliario.
+Para interpretar estos resultados, hemos generado gráficos interactivos con Plotly:
+
+1. **Comparativa de Modelos (R2, MAE, RMSE)**:
+
+![Regression_01](assets/regression_01.png)
+Esta gráfica demuestra visualmente la superioridad del Gradient Boosting, que logra el $R^2$ más alto (**0.84**) y minimiza los errores absolutos (MAE de **6.01**) y cuadráticos (RMSE de **7.60**) en el conjunto de Test respecto a sus competidores (Random Forest, k-NN y Ridge).
+
+2. **Realidad vs Predicción**:
+
+![Regression_02](assets/regression_02.png)
+Un gráfico de dispersión que enfrenta el precio real de la vivienda (IPV) frente al precio que predijo nuestro algoritmo. La cercanía de la gran mayoría de los puntos a la línea de "Predicción Perfecta" confirma visualmente que el modelo tiene una alta fiabilidad (84% de varianza explicada) y que sus estimaciones se ajustan a la realidad del mercado.
+
+3. **Importancia de las Variables (Feature Importance)**:
+
+![Regression_03](assets/regression_03.png)
+Esta es la visualización más crítica para extraer valor de negocio. Revela qué factores socioeconómicos tienen un peso real y determinante a la hora de predecir el IPV. Al analizar la gráfica de nuestro modelo ganador, extraemos las siguientes conclusiones:
+* **1. La digitalización y el turismo como principales motores del precio**: Las variables con mayor peso absoluto en el modelo son las **Comunicaciones** (casi 0.40) y la inflación en **Restaurantes y hoteles** (aprox. 0.25).
+Es importante destacar que, dentro del IPC, la categoría de "Comunicaciones" engloba los servicios de telefonía, conexión a internet y equipos informáticos. Su enorme impacto en el modelo sugiere que el encarecimiento de la vivienda está fuertemente vinculado a zonas con un alto nivel de digitalización, teletrabajo y desarrollo tecnológico. Sumado al peso de la hostelería, vemos claramente cómo el precio de la vivienda está traccionado por el sector servicios y la presión turística, más que por los sueldos en sí.
+
+* **2. La nula influencia de la cesta de la compra básica**: Llama fuertemente la atención que la inflación en productos de primera necesidad como **Alimentos y bebidas no alcohólicas** o **Vestido y calzado**, tenga un impacto prácticamente nulo en el modelo (cercano a 0). Esto sugiere que el mercado inmobiliario funciona con una dinámica independiente a los gastos diarios de las familias. 
+
+* **3. La desconexión entre los salarios locales y el encarecimiento inmobiliario**: Variables macroeconómicas tradicionales que a priori parecían determinantes, como el **salario medio** (`salario_medio`) o la **tasa de paro** (`tasa_paro_media`) tienen un peso secundario (por debajo de 0.1). Esto valida la hipótesis de que, en muchas regiones, el precio de la vivienda sube impulsado por factores externos (turismo, rentas altas, sector servicios) sin que los salarios de la población local crezcan al mismo ritmo. Esto explica la grave pérdida de poder adquisitivo que sufre gran parte de la ciudadanía.
 
 ## 🚀 Instalación y Uso
 

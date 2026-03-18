@@ -26,15 +26,13 @@ def train_housing_prediction():
     # 3. DIVISIÓN DEL DATASET 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # 4. PREPROCESAMIENTO: Target Encoding y StandardScaler
-    print("Aplicando Target Encoding (Solo en Train para evitar Data Leakage)...")
-    
+    # 4. PREPROCESAMIENTO: Target Encoding y StandardScaler    
     encoder = ce.TargetEncoder(cols=['comunidad'])
     
     # Aprende las medias SOLO del Train y transforma el Train
     X_train = encoder.fit_transform(X_train, y_train)
     
-    # Transforma el Test usando lo que aprendió del Train (¡sin mirar las respuestas y_test!)
+    # Transforma el Test usando lo que aprendió del Train
     X_test = encoder.transform(X_test)
 
     column_names = X_train.columns
