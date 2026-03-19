@@ -14,13 +14,13 @@ import os
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 dataframe = pd.read_csv('data_output/csv/ML.csv')
 
-ultimo_anio = dataframe['anio'].max() # Último año
-df_foto = dataframe[dataframe['anio'] == ultimo_anio].copy() # dataframe con el último año
+last_year = dataframe['anio'].max() # Último año
+df_snapshot = dataframe[dataframe['anio'] == last_year].copy() # dataframe con el último año
 
 # Aislar variables y escalar
-variables = ['salario_medio', 'precio_vivienda', 'tasa_paro_media']
-datos = df_foto[variables]
-datos_escalados = StandardScaler().fit_transform(datos)
+features = ['salario_medio', 'precio_vivienda', 'tasa_paro_media']
+data = df_snapshot[features]
+scaled_data = StandardScaler().fit_transform(data)
 
 
 
@@ -28,39 +28,39 @@ datos_escalados = StandardScaler().fit_transform(datos)
 # 2. ALGORITMO K-MEANS
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 kmeans = KMeans(n_clusters=3, random_state=42)
-df_foto['Cluster'] = kmeans.fit_predict(datos_escalados)
+df_snapshot['Cluster'] = kmeans.fit_predict(scaled_data)
 
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 3. INTELIGENCIA DE COLORES Y FORMATO PARA LA GRÁFICA
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-estadisticas = df_foto.groupby('Cluster')[['salario_medio', 'tasa_paro_media']].mean()
-estadisticas['Puntuacion'] = estadisticas['salario_medio'] - (estadisticas['tasa_paro_media'] * 500)
-estadisticas = estadisticas.sort_values(by='Puntuacion', ascending=False)
+stats = df_snapshot.groupby('Cluster')[['salario_medio', 'tasa_paro_media']].mean()
+stats['Puntuacion'] = stats['salario_medio'] - (stats['tasa_paro_media'] * 500)
+stats = stats.sort_values(by='Puntuacion', ascending=False)
 
-grupo_verde = estadisticas.index[0]
-grupo_amarillo = estadisticas.index[1]
-grupo_rojo = estadisticas.index[2]
+green_cluster = stats.index[0]
+yellow_cluster = stats.index[1]
+red_cluster = stats.index[2]
 
-diccionario_nombres = {
-    grupo_verde: '🟢 Óptima (Alto Salario, Bajo Paro)',
-    grupo_amarillo: '🟡 Intermedia (Transición)',
-    grupo_rojo: '🔴 Vulnerable (Bajo Salario, Alto Paro)'
+name_dict = {
+    green_cluster: '🟢 Óptima (Alto Salario, Bajo Paro)',
+    yellow_cluster: '🟡 Intermedia (Transición)',
+    red_cluster: '🔴 Vulnerable (Bajo Salario, Alto Paro)'
 }
 
-mapa_colores = {
+color_map = {
     '🟢 Óptima (Alto Salario, Bajo Paro)': '#2ca02c', 
     '🟡 Intermedia (Transición)': '#ffc107',          
     '🔴 Vulnerable (Bajo Salario, Alto Paro)': '#d62728' 
 }
 
-df_foto['Estado Financiero'] = df_foto['Cluster'].map(diccionario_nombres)
+df_snapshot['Estado Financiero'] = df_snapshot['Cluster'].map(name_dict)
 
 # Textos para el hover 
-df_foto['Salario'] = df_foto['salario_medio'].round(0).astype(int).astype(str) + " €"
-df_foto['Paro'] = df_foto['tasa_paro_media'].round(1).astype(str) + " %"
-df_foto['Índice Vivienda'] = df_foto['precio_vivienda'].round(1).astype(str) + " (Base 100)"
+df_snapshot['Salario'] = df_snapshot['salario_medio'].round(0).astype(int).astype(str) + " €"
+df_snapshot['Paro'] = df_snapshot['tasa_paro_media'].round(1).astype(str) + " %"
+df_snapshot['Índice Vivienda'] = df_snapshot['precio_vivienda'].round(1).astype(str) + " (Base 100)"
 
 
 
@@ -68,7 +68,7 @@ df_foto['Índice Vivienda'] = df_foto['precio_vivienda'].round(1).astype(str) + 
 # 4. PREPARAR NOMBRES PARA EL MAPA 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Este es el mapeo EXACTO que usa el archivo geojson de click_that_hood
-diccionario_ccaa = {
+region_dict = {
     'Andalucía': 'Andalucia',
     'Aragón': 'Aragon',
     'Asturias, Principado de': 'Asturias', 
@@ -87,22 +87,22 @@ diccionario_ccaa = {
     'País Vasco': 'Pais Vasco',                   
     'Rioja, La': 'La Rioja'
 }
-df_foto['Nombre_Mapa'] = df_foto['comunidad'].map(diccionario_ccaa)
+df_snapshot['Nombre_Mapa'] = df_snapshot['comunidad'].map(region_dict)
 
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 5. CREAR EL GRÁFICO HTML INTERACTIVO
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-url_mapa = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/spain-communities.geojson"
+map_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/spain-communities.geojson"
 
 fig = px.choropleth_map(
-    df_foto,
-    geojson=url_mapa, 
+    df_snapshot,
+    geojson=map_url, 
     featureidkey="properties.name", 
     locations="Nombre_Mapa",        
     color="Estado Financiero",
-    color_discrete_map=mapa_colores,
+    color_discrete_map=color_map,
     hover_name="comunidad",
     hover_data={
         "Nombre_Mapa": False, 
@@ -115,7 +115,7 @@ fig = px.choropleth_map(
     map_style="carto-positron", 
     zoom=4.8, 
     center={"lat": 40.0, "lon": -3.0}, 
-    title=f"Radiografía del Poder Adquisitivo en España ({ultimo_anio})<br><sub>Agrupación K-Means de Comunidades Autónomas.</sub>"
+    title=f"Radiografía del Poder Adquisitivo en España ({last_year})<br><sub>Agrupación K-Means de Comunidades Autónomas.</sub>"
 )
 
 # Ajustes visuales
@@ -139,10 +139,6 @@ fig.update_layout(
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 6. GUARDAR EL GRÁFICO  
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-carpeta_salida = r"C:\Users\BelenML\github\SBD_Act1.1\data_output\graphics\clustering_graphics"
-os.makedirs(carpeta_salida, exist_ok=True)
-archivo_salida = os.path.join(carpeta_salida, 'mapa_interactivo_ccaa.html')
+fig.write_html("data_output/graphics/clustering_graphics/mapa_interactivo_por_ccaa.html")
 
-fig.write_html(archivo_salida)
-
-print(f"Mapa de regiones creado con éxito en {archivo_salida} ")
+print(f"Mapa de regiones creado con éxito")
