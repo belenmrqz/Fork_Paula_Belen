@@ -264,7 +264,7 @@ ___
 Una vez finalizada la fase de procesamiento y estructuración de datos con Polar, entramos en la etapa de **Explotación de datos**. 
 Utilizaremos la herramienta de Business Intelligente (BI) **Tableau** para generar informes gráficos sobre los datos procesados anteriormente. 
 
-### Paso 1: Genenrar una conexión híbrida
+### Paso 1: Generar una conexión híbrida
 
 #### Carga de archivos:
 Importaremos al programa de Tableau los CSV que procesamos anteriormente con Polars
@@ -352,7 +352,17 @@ Representa "el dinero que entra en casa". Nos sirve para ver si los salarios est
 4. **La Inflación por Categorías:**
 Representa "el dinero que sale de casa". Es la pareja perfecta para la gráfica del salario: de nada sirve alegrarnos porque el sueldo suba un poco, si al lado vemos que el precio de los alimentos o la luz ha subido el doble. Esto explica por qué a la gente le cuesta más llegar a fin de mes.
 
+### 📖 Storytelling (Historias de Tableau): La Ilusión Monetaria y la Brecha Social
 
+Para culminar la fase de análisis visual y dar respuesta a la pregunta principal del proyecto, hemos utilizado la función **"Historias"** de Tableau. El objetivo no es solo mostrar gráficos aislados, sino guiar al espectador a través de una narrativa de datos lógica que explique la pérdida real de poder adquisitivo de la clase trabajadora.
+
+La historia interactiva consta de 5 puntos clave:
+
+1. **¿Ganamos más que nunca? (El mapa de los salarios):** Partimos del mapa de calor regional para demostrar que, aunque los salarios nominales han crecido, existe una "España a dos velocidades" donde el código postal condiciona fuertemente los ingresos.
+2. **La "ola roja" de la inflación asfixia los hogares:** Al cruzar los sueldos con los gastos, el espejismo desaparece. Filtramos las categorías más vitales (*Alimentos, Vivienda, Transporte y Hostelería*) para mostrar cómo el encarecimiento de la supervivencia básica ahoga a las familias, tiñendo el mapa histórico de rojo.
+3. **La ilusión óptica: El dinero que entra vs. el que sale:** Analizamos la tendencia alcista del salario medio para contrastarla con la inflación. La conclusión matemática es clara: los sueldos suben por las escaleras, pero el coste de la vida sube por el ascensor.
+4. **La doble penalización: Ser joven y mujer:** Desglosamos el desempleo para demostrar que las crisis no afectan a todos por igual. La gráfica evidencia la vulnerabilidad estructural de los jóvenes (16-19 años) y, en especial, el bloqueo que sufren las mujeres jóvenes para acceder al mercado.
+5. **La radiografía final del ciudadano en 2023:** Cerramos la presentación con nuestro *Dashboard Interactivo*, invitando al usuario a filtrar por su propia Comunidad Autónoma para descubrir la tormenta perfecta entre su mercado laboral local, la inflación de su zona y la evolución de su sueldo.
 
 ___
 ## Modelado de datos
