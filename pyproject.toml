@@ -6,10 +6,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "category-encoders>=2.9.0",
+    "joblib>=1.5.3",
     "pandas>=2.3.3",
     "plotly>=6.5.2",
     "polars>=1.38.1",
     "requests>=2.32.5",
     "scikit-learn>=1.8.0",
     "statsmodels>=0.14.6",
+    "streamlit>=1.57.0",
 ]
