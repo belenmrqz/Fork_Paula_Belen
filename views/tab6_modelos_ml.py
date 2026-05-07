@@ -1,5 +1,5 @@
 import streamlit as st
-
+from views.clustering_logic import show_clustering
 from views.simulator_logic import show_simulator 
 
 # from views.clustering_logic import show_clustering 
@@ -14,10 +14,7 @@ def show_modelos_ml():
     tab_cluster, tab_simulator = st.tabs(["🗂️ Clustering · K-Means", "🔮 Simulador IPV"])
     
     with tab_cluster:
-        st.info("Segmentación no supervisada de las 19 CCAA usando **K-Means (k=3)**.")
-        # show_clustering() 
-        
-        st.write("📍 *Aquí irá el mapa interactivo y las gráficas de Clustering.*")
+        show_clustering() 
         
     with tab_simulator:
         show_simulator()
