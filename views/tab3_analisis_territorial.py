@@ -3,14 +3,27 @@ import pandas as pd
 import plotly.express as px
 import json
 import requests
+from pathlib import Path
+import streamlit.components.v1 as components
 
 # ── FUNCIONES DE CARGA Y PROCESAMIENTO ────────────────────────────────────
+
+def mostrar_grafico_html(ruta_archivo):
+    """Lee y muestra un archivo HTML exportado previamente por Plotly"""
+    path = Path(ruta_archivo)
+    if path.exists():
+        html_content = path.read_text(encoding="utf-8")
+        components.html(
+            html_content,
+            height=500,
+        )
+    else:
+        st.warning(f"No se encontró el gráfico: {ruta_archivo}")
+
 @st.cache_data
 def load_territorial_data():
     df_salarios = pd.read_csv("data_output/csv/Evolucion_Salario_Comunidades.csv")
-    df_paro_salarios = pd.read_csv("data_output/csv/Relacion_Paro_Salarios.csv")
-    df_corr = pd.read_csv("data_output/csv/Correlacion_Paro_Salarios.csv")
-    return df_salarios, df_paro_salarios, df_corr
+    return df_salarios
 
 @st.cache_data
 def load_geojson():
@@ -19,12 +32,13 @@ def load_geojson():
     return respuesta.json()
 
 # ── VISTA PRINCIPAL ────────────────────────────────────────────────────────
+
 def show_analisis_territorial():
     st.title("Análisis territorial")
     st.markdown("Desglose por Comunidades Autónomas · salarios, paro y poder adquisitivo")
 
     try:
-        df_salarios, df_paro_salarios, df_corr = load_territorial_data()
+        df_salarios = load_territorial_data()
         nombre_col_salario = "salario_medio" 
         df_2023 = df_salarios[df_salarios["anio"] == 2023].sort_values(by=nombre_col_salario, ascending=False)
     except Exception as e:
@@ -57,8 +71,6 @@ def show_analisis_territorial():
             st.markdown("**Mapa de salarios · CCAA**")
             try:
                 geojson = load_geojson()
-                
-                # 1. Creamos el diccionario traductor
                 traduccion_nombres = {
                     "Madrid, Comunidad de": "Comunidad de Madrid",
                     "Navarra, Comunidad Foral de": "Comunidad Foral de Navarra",
@@ -71,11 +83,9 @@ def show_analisis_territorial():
                     "Canarias": "Islas Canarias"
                 }
                 
-                # 2. Hacemos una copia de los datos solo para el mapa y le aplicamos el traductor
                 df_mapa = df_2023.copy()
                 df_mapa["comunidad"] = df_mapa["comunidad"].replace(traduccion_nombres)
                 
-                # 3. Dibujamos el mapa con df_mapa en lugar de df_2023
                 fig_map = px.choropleth(
                     df_mapa, 
                     geojson=geojson, 
@@ -107,42 +117,17 @@ def show_analisis_territorial():
     with row2_col1:
         with st.container(border=True):
             st.markdown("**Curva de Phillips regional · paro vs salario**")
-            fig_scatter = px.scatter(
-                df_paro_salarios, 
-                x="tasa_paro_media", 
-                y=nombre_col_salario,
-                color="comunidad", 
-                trendline="ols"
-            )
-            st.plotly_chart(fig_scatter, use_container_width=True)
+            mostrar_grafico_html("data_output/graphics/4_paro_vs_salarios.html")
             st.caption("💡 **Cómo interpretar:** Muestra si existe una relación entre un mayor nivel de paro y salarios más bajos en las distintas regiones.")
 
     with row2_col2:
         with st.container(border=True):
             st.markdown("**Correlación de Pearson por CCAA**")
-            fig_corr = px.bar(
-                df_corr, 
-                x="correlacion_pearson",
-                y="comunidad",
-                orientation='h', 
-                color="correlacion_pearson", 
-                color_continuous_scale="RdBu"
-            )
-            fig_corr.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_corr, use_container_width=True)
+            mostrar_grafico_html("data_output/graphics/4b_correlacion_paro_salarios.html")
 
     st.write("")
 
     # --- FILA 3: Evolución Salarial ---
     with st.container(border=True):
         st.markdown("**Evolución salarial por CCAA**")
-        ccaa_seleccionadas = st.multiselect(
-            "Selecciona regiones para comparar", 
-            options=df_salarios['comunidad'].unique(),
-            default=["País Vasco", "Madrid, Comunidad de", "Extremadura"]
-        )
-        
-        if ccaa_seleccionadas:
-            df_filtrado = df_salarios[df_salarios['comunidad'].isin(ccaa_seleccionadas)]
-            fig_line = px.line(df_filtrado, x="anio", y=nombre_col_salario, color="comunidad")
-            st.plotly_chart(fig_line, use_container_width=True)
+        mostrar_grafico_html("data_output/graphics/1_evolucion_salarios.html")
