@@ -49,7 +49,7 @@ def _aplanar_nombre_serie(codigo, nombre_serie):
 
     # ---------------------------------------------------------
     # TASA DE PARO (65334)
-    # Puede venir como: "Tasa de paro... Ambos sexos. Andalucía. Todas las edades."
+    # Puede venir como: "Tasa de paro... Ambos sexos. Andalucía. Total."
     # O como: "Andalucía. Tasa de paro... Ambos sexos. 25 y más años."
     # ---------------------------------------------------------
     if codigo == TASA_PARO:
@@ -65,7 +65,7 @@ def _aplanar_nombre_serie(codigo, nombre_serie):
                 metadata["Sexo"] = p
                 
             # Identificamos la Edad ("Todas las edades", "25 y más años", etc.)
-            elif "edades" in p.lower() or "años" in p.lower():
+            elif "edades" in p.lower() or "años" in p.lower() or p == "Total":
                 metadata["Grupo_Edad"] = p
                 
             # Ignoramos el nombre del indicador
@@ -427,6 +427,14 @@ def _obtener_o_crear(tabla, columna_busqueda, valor_busqueda, **kwargs):
     """
     Función centralizada para buscar o crear una dimensión (Periodo, Geografía, Indicador).
     """
+
+    # --- NORMALIZACIÓN DE CAPA ORO ---
+    # Si estamos procesando Geografía, unificamos España antes de buscar o insertar
+    if tabla == "geografia":
+        if valor_busqueda in ["Nacional", "Total Nacional"]:
+            valor_busqueda = "Total Nacional"
+    # ---------------------------------
+
     id_columna = f"id_{tabla}"
     tabla_nombre = f"tbl_{tabla}"
 

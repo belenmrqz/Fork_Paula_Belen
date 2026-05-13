@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import plotly.express as px
-import os
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1. CARGA Y PREPARACIÓN DE DATOS
@@ -44,15 +43,15 @@ yellow_cluster = stats.index[1]
 red_cluster = stats.index[2]
 
 name_dict = {
-    green_cluster: '🟢 Óptima (Alto Salario, Bajo Paro)',
-    yellow_cluster: '🟡 Intermedia (Transición)',
-    red_cluster: '🔴 Vulnerable (Bajo Salario, Alto Paro)'
+    green_cluster: 'Óptimo',
+    yellow_cluster: 'Intermedio',
+    red_cluster: 'Vulnerable'
 }
 
 color_map = {
-    '🟢 Óptima (Alto Salario, Bajo Paro)': '#2ca02c', 
-    '🟡 Intermedia (Transición)': '#ffc107',          
-    '🔴 Vulnerable (Bajo Salario, Alto Paro)': '#d62728' 
+    'Óptimo': '#2ca02c', 
+    'Intermedio': '#ffc107',          
+    'Vulnerable': '#d62728' 
 }
 
 df_snapshot['Estado Financiero'] = df_snapshot['Cluster'].map(name_dict)
@@ -137,8 +136,36 @@ fig.update_layout(
 )
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 5.B CREAR EL GRÁFICO DEL CODO
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inertias = []
+K_range = range(1, 9)
+
+# Entrenamos mini-modelos del 1 al 8 solo para sacar el error (inercia)
+for k in K_range:
+    km = KMeans(n_clusters=k, random_state=42).fit(scaled_data)
+    inertias.append(km.inertia_)
+
+# Creamos la gráfica con Plotly
+fig_codo = px.line(x=list(K_range), y=inertias, labels={'x': 'Número de clusters (k)', 'y': 'Inercia'})
+fig_codo.add_scatter(x=[3], y=[inertias[2]], mode='markers', marker=dict(color='red', size=10), name='k=3 óptimo')
+
+# Diseño limpio y compacto
+fig_codo.update_layout(
+    height=250, 
+    margin=dict(t=10, b=10, l=10, r=10), 
+    showlegend=False,
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)"
+)
+
+print("Gráfico del codo generado con éxito en codo_kmeans.html")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 6. GUARDAR EL GRÁFICO  
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 fig.write_html("data_output/graphics/clustering_graphics/mapa_interactivo_por_ccaa.html")
+fig_codo.write_html("data_output/graphics/clustering_graphics/codo_kmeans.html")
+df_snapshot.to_csv("data_output/csv/ML_clustering.csv", index=False)
 
 print(f"Mapa de regiones creado con éxito")

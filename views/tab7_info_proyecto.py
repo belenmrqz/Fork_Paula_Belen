@@ -1,4 +1,5 @@
 import streamlit as st
+from config.constantes import REPO_URL
 
 def show_project_info():
     """
@@ -11,8 +12,7 @@ def show_project_info():
     st.markdown("### Análisis de la Evolución del Poder Adquisitivo en España")
     
     # Botón principal para ir al repositorio
-    repo_url = "https://github.com/belenmrqz/Fork_Paula_Belen"
-    st.link_button("🔗 Ver repositorio completo en GitHub", repo_url, type="primary")
+    st.link_button("🔗 Ver repositorio completo en GitHub", REPO_URL, type="primary")
     
     st.divider()
 

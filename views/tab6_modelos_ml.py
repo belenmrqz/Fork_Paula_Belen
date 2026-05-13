@@ -2,8 +2,6 @@ import streamlit as st
 from views.clustering_logic import show_clustering
 from views.simulator_logic import show_simulator 
 
-# from views.clustering_logic import show_clustering 
-
 def show_modelos_ml():
     """Renderiza la pestaña principal de Modelos de Machine Learning."""
     

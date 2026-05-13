@@ -1,37 +1,11 @@
-import json
 import streamlit as st
-import joblib
 import plotly.express as px
 import pandas as pd
-from pathlib import Path
+from config.constantes import CAT_DESCRIPTION_TOOLTIP, COLUMN_LABELS, MODELS_DIR
+from utils.data import load_csv, load_ml_artifacts, load_json
+from utils.charts import render_html, chart_caption
 
 # ── HELPERS / FUNCIONES AUXILIARES ─────────────────────────────────────────
-# Usamos @st.cache_data y @st.cache_resource para guardar en la memoria RAM
-# de la aplicación estos datos y no tener que recargarlos cada vez que el
-# usuario toca un botón.
-
-
-@st.cache_data
-def load_historic_data() -> pd.DataFrame:
-    """Carga el dataset histórico limpio y listo para analítica."""
-    return pd.read_csv("data_output/csv/ML.csv")
-
-
-@st.cache_resource
-def load_model():
-    """
-    Carga los artefactos del modelo de Machine Learning desde la carpeta local.
-    Retorna el modelo, el codificador de variables categóricas (target_encoder)
-    y el escalador numérico (scaler).
-    """
-    path = Path("data_output/models")
-    try:
-        model = joblib.load(path / "regression_model.pkl")
-        encoder = joblib.load(path / "target_encoder.pkl")
-        scaler = joblib.load(path / "scaler.pkl")
-        return model, encoder, scaler
-    except FileNotFoundError as e:
-        return None, None, None
 
 
 @st.cache_data
@@ -87,19 +61,12 @@ def show_simulator():
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 
     # Leemos las métricas reales del entrenamiento guardadas en el JSON
-    metrics_path = Path("data_output/models/model_metrics.json")
-
-    if metrics_path.exists():
-        with open(metrics_path, "r", encoding="utf-8") as f:
-            metrics = json.load(f)
-    else:
-        # Fallback de seguridad si no existe el archivo
-        metrics = {
-            "Modelo": "Gradient Boosting",
-            "R2_Test": 0.84,
-            "MAE_Test": 6.01,
-            "RMSE_Test": 7.60,
-        }
+    metrics = load_json(MODELS_DIR / "model_metrics.json") or {
+        "Modelo": "Gradient Boosting",
+        "R2_Test": 0.84,
+        "MAE_Test": 6.01,
+        "RMSE_Test": 7.60,
+    }
 
     col_m1.metric(
         label="Modelo utilizado",
@@ -145,28 +112,21 @@ def show_simulator():
 
     # 3. Gráficos HTML exportados desde la fase de entrenamiento
     with st.expander("📊 Ver fiabilidad del modelo (Realidad vs Predicción)"):
-        html_path = Path("data_output/graphics/grafico_prediccion_vs_real.html")
-        if html_path.exists():
-            st.iframe(html_path.read_text(encoding="utf-8"), height=450)
-        else:
-            st.warning("No se encontró el gráfico en data_output/graphics/")
+        render_html("grafico_prediccion_vs_real.html", height=450)
 
     st.subheader("¿Qué variables mueven la predicción? - Importancia del Modelo")
 
-    html_fi = Path("data_output/graphics/grafico_importancia_rf.html")
-    if html_fi.exists():
-        st.iframe(html_fi.read_text(encoding="utf-8"), height="content")
-        st.info(
-            "Las variables que más impactan son: **Comunicaciones y Restaurante y hoteles**. Tenlo en cuenta a la hora de predecir el precio de la vivienda. "
-        )
-
-    else:
-        st.warning("No se encontró el gráfico. Comprueba la ruta.")
+    render_html("grafico_importancia_rf.html", height=450)
+    st.info(
+        "Las variables que más impactan son: **Comunicaciones y Restaurante y hoteles**. Tenlo en cuenta a la hora de predecir el precio de la vivienda. "
+    )
 
     st.divider()
 
     # 4. Carga de los archivos del modelo en memoria
-    model, target_encoder, scaler = load_model()
+    model, target_encoder, scaler = load_ml_artifacts(
+        "regression_model.pkl", "target_encoder.pkl", "scaler.pkl"
+    )
 
     if model is None:
         st.error(
@@ -181,9 +141,9 @@ def show_simulator():
     st.markdown("**Datos principales**")
 
     # Preparamos los datos base para los inputs
-    historic_df = load_historic_data()
+    historic_df = load_csv("ML.csv")
     ccaa_defaults = get_default_ccaa_values(historic_df)
-    expected_model_columns = list(
+    expected_model_cols = list(
         scaler.feature_names_in_
     )  # Columnas exactas que espera el modelo
     unique_ccaa_list = sorted(historic_df["comunidad"].dropna().unique().tolist())
@@ -213,7 +173,11 @@ def show_simulator():
             )  # Anualizamos para el modelo
 
             unemployment_input = st.slider(
-                "Tasa de paro (%)", 5.0, 35.0, default_unemployment, step=0.5
+                COLUMN_LABELS.get("tasa_paro_media"),
+                5.0,
+                35.0,
+                default_unemployment,
+                step=0.5,
             )
             selected_data["tasa_paro_media"] = unemployment_input
 
@@ -224,15 +188,11 @@ def show_simulator():
         with st.container(border=True):
             st.markdown("**IPC por categorías (Destacadas)**")
 
-            ipc_com_default = float(v.get("Comunicaciones", 100.0))
-            ipc_rest_default = float(v.get("Restaurantes y hoteles", 105.0))
-            ipc_ali_default = float(v.get("Alimentos y bebidas no alcohólicas", 110.0))
-
             selected_data["Comunicaciones"] = st.slider(
                 "Comunicaciones — peso 0.39",
                 80.0,
                 130.0,
-                ipc_com_default,
+                float(v.get("Comunicaciones", 100.0)),
                 step=0.5,
                 help="Incluye servicios de telefonía, conexión a internet y compra de equipos móviles.",
             )
@@ -240,7 +200,7 @@ def show_simulator():
                 "Restaurantes y hoteles — peso 0.25",
                 80.0,
                 130.0,
-                ipc_rest_default,
+                float(v.get("Restaurantes y hoteles", 105.0)),
                 step=0.5,
                 help="Evolución de precios en menús del día, cafeterías, servicios de alojamiento y hoteles.",
             )
@@ -248,48 +208,30 @@ def show_simulator():
                 "Alimentos — peso 0.02",
                 80.0,
                 130.0,
-                ipc_ali_default,
+                float(v.get("Alimentos y bebidas no alcohólicas", 110.0)),
                 step=0.5,
                 help="Refleja el coste de la cesta de la compra básica en supermercados (pan, carne, aceite, frutas, etc.).",
             )
 
         # Generador dinámico para el resto de categorías menos importantes
         with st.expander("Resto de categorías IPC"):
-            showed_variables = list(selected_data.keys())
-            rest_ipc_categories = [
-                col for col in expected_model_columns if col not in showed_variables
-            ]
-
-            help_dict = {
-                "Transporte": "Precio de carburantes, compra de vehículos y transporte público (metro, autobús, vuelos).",
-                "Sanidad": "Servicios médicos, seguros de salud, dentistas y productos farmacéuticos.",
-                "Ocio y cultura": "Entradas a espectáculos, cine, libros, paquetes turísticos y equipos audiovisuales.",
-                "Vestido y calzado": "Prendas de vestir y zapatos (suele fluctuar mucho por la temporada de rebajas).",
-                "Enseñanza": "Matrículas universitarias, colegios privados, academias y material escolar.",
-                "Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar": "Electrodomésticos, muebles, herramientas y artículos de limpieza diaria.",
-                "Bebidas alcohólicas y tabaco": "Vinos, cervezas, licores y cigarrillos (muy afectado por impuestos especiales).",
-                "Otros bienes y servicios": "Seguros de coche/hogar, peluquerías, residencias y cuidados personales.",
-            }
-            col_expander = st.columns(3)
-            for i, cat in enumerate(rest_ipc_categories):
-                with col_expander[i % 3]:  # Distribuye uniformemente en las 3 columnas
-                    default_value = float(v.get(cat, 100.0))
+            rest_cats = [c for c in expected_model_cols if c not in selected_data]
+            col_exp = st.columns(3)
+            for i, cat in enumerate(rest_cats):
+                with col_exp[i % 3]:  # Distribuye uniformemente en las 3 columnas
                     label_name = (
                         "Muebles y hogar" if "Muebles" in cat else cat
                     )  # Acorta el nombre largo
                     selected_data[cat] = st.number_input(
                         label_name,
-                        value=default_value,
+                        value=float(v.get(cat, 100.0)),
                         step=0.5,
-                        help=help_dict.get(
+                        help=CAT_DESCRIPTION_TOOLTIP.get(
                             cat, "Índice de precios para esta categoría."
                         ),
                     )
 
     st.divider()
-
-    # Variable fijada para el análisis del Scatter Plot interactivo
-    scatter_variable = "Comunicaciones"
 
     # 6. GESTIÓN DEL BOTÓN Y MEMORIA DE ESTADO (Session State)
 
@@ -305,147 +247,143 @@ def show_simulator():
         st.session_state.show_prediction = True
         st.session_state.saved_data = selected_data
 
+    if not st.session_state.get("show_prediction", False):
+        return
+
     # 7. BLOQUE DE PREDICCIÓN (Solo se ejecuta si la memoria está activa)
-    if st.session_state.get("show_prediction", False):
-        st.subheader("Resultado e Interpretación")
 
-        # Calculamos la media nacional real para comparar
-        try:
-            historic_df = load_historic_data()
-            national_mean = historic_df["precio_vivienda"].mean()
-        except Exception:
-            historic_df = None
-            national_mean = 112.1  # Fallback por si hay un error al leer el CSV
+    st.subheader("Resultado e Interpretación")
 
-        # Transformación y Predicción con el modelo
-        # Usamos los datos guardados en memoria para construir el DataFrame
-        prediction_df = pd.DataFrame(
-            [st.session_state.saved_data], columns=expected_model_columns
+    # Calculamos la media nacional real para comparar
+    try:
+        national_mean = load_csv("ML.csv")["precio_vivienda"].mean()
+    except Exception:
+        national_mean = 112.1  # Fallback por si hay un error al leer el CSV
+
+    # Transformación y Predicción con el modelo
+    # Usamos los datos guardados en memoria para construir el DataFrame
+    prediction_df = pd.DataFrame(
+        [st.session_state.saved_data], columns=expected_model_cols
+    )
+    try:
+        predicted_ipv = model.predict(
+            scaler.transform(target_encoder.transform(prediction_df))
+        )[0]
+
+    except Exception as e:
+        st.error(f"Error en la transformación: {e}")
+        st.stop()
+
+    col_m1, col_g2 = st.columns(2)
+
+    # --- Resultados en Texto (Columna Izquierda) ---
+    with col_m1:
+        st.metric(
+            label="Índice de Precio de Vivienda estimado (Base 100 = referencia INE)",
+            value=f"{predicted_ipv:.1f}",
+            delta=(predicted_ipv - national_mean).round(2),
+            delta_color="inverse",
+            border=True,
         )
-        try:
-            encoded_data = target_encoder.transform(prediction_df)
-            scaled_data = scaler.transform(encoded_data)
-            predicted_ipv = model.predict(scaled_data)[0]
-        except Exception as e:
-            st.error(f"Error en la transformación: {e}")
-            st.stop()
 
-        col_m1, col_g2 = st.columns(2)
+        # Generación del mensaje dinámico contextualizado
+        base_diff = predicted_ipv - 100
 
-        # --- Resultados en Texto (Columna Izquierda) ---
-        with col_m1:
-            st.metric(
-                label="Índice de Precio de Vivienda estimado (Base 100 = referencia INE)",
-                value=f"{predicted_ipv:.1f}",
-                delta=(predicted_ipv - national_mean).round(2),
-                delta_color="inverse",
-                border=True,
+        if predicted_ipv > national_mean:
+            # Usamos warning (amarillo) si el precio es mayor
+            st.warning(
+                f"El IPV estimado de **{predicted_ipv:.1f}** está **por encima de la media nacional ({national_mean:.1f})**, "
+                f"y un **{base_diff:.1f}% por encima del año base (100)**. "
+                "El esfuerzo financiero para acceder a la vivienda en este escenario es crítico."
+            )
+        else:
+            # Usamos info (azul) si se mantiene
+            st.info(
+                f"El IPV estimado de **{predicted_ipv:.1f}** está **por debajo de la media nacional ({national_mean:.1f})**, "
+                f"pero un **{base_diff:.1f}% por encima del año base (100)**. "
+                "Aunque está por debajo de la media, la vivienda sigue encareciéndose."
             )
 
-            # Generación del mensaje dinámico contextualizado
-            base_diff = predicted_ipv - 100
-
-            if predicted_ipv > national_mean:
-                mean_txt = f"**por encima de la media nacional ({national_mean:.1f})**"
-                # Usamos warning (amarillo) si el precio es mayor
-                st.warning(
-                    f"El IPV estimado de **{predicted_ipv:.1f}** está {mean_txt}, "
-                    f"y un **{base_diff:.1f}% por encima del año base (100)**. "
-                    "El esfuerzo financiero para acceder a la vivienda en este escenario es crítico."
-                )
-            else:
-                mean_txt = f"**por debajo de la media nacional ({national_mean:.1f})**"
-                # Usamos info (azul) si se mantiene
-                st.info(
-                    f"El IPV estimado de **{predicted_ipv:.1f}** está {mean_txt}, "
-                    f"pero un **{base_diff:.1f}% por encima del año base (100)**. "
-                    "Aunque está por debajo de la media, la vivienda sigue encareciéndose."
-                )
-
-        # --- Gráfico Contextual Histograma (Columna Derecha) ---
-        with col_g2:
-            if historic_df is not None:
-                with st.container(border=True):
-
-                    # Histograma
-                    fig_hist = px.histogram(
-                        historic_df,
-                        x="precio_vivienda",
-                        nbins=30,
-                        title="Distribución histórica del IPV + tu escenario",
-                        labels={"precio_vivienda": "IPV"},
-                        color_discrete_sequence=["#97C2FC"],
-                    )
-                    fig_hist.add_vline(
-                        x=predicted_ipv,
-                        line_dash="solid",
-                        line_color="red",
-                        line_width=2,
-                        annotation_text="tu escenario",
-                        annotation_font_color="red",
-                    )
-                    fig_hist.update_layout(margin=dict(t=40, b=10))
-
-                    st.plotly_chart(
-                        fig_hist,
-                        width="stretch",
-                        height=230,
-                    )
-                    st.caption(
-                        "💡 **Cómo leer este gráfico:** Las barras azules muestran la frecuencia histórica de los precios de vivienda en España. La línea roja indica dónde se sitúa tu escenario. Si cae en un extremo, significa que predice un mercado inmobiliario inusualmente barato o caro."
-                    )
-
-        # --- Gráfico Inferior a todo ancho: Scatter Plot---
+    # --- Gráfico Contextual Histograma (Columna Derecha) ---
+    with col_g2:
         if historic_df is not None:
             with st.container(border=True):
-                st.markdown("**Analiza tu escenario en perspectiva**")
-                
-                # El usuario elige con qué variable comparar el IPV
-                scatter_options = [
-                    col for col in expected_model_columns if col != "comunidad"
-                ]
-                selected_scatter_axis = st.selectbox(
-                    "Elige la métrica para comparar en el gráfico:",
-                    scatter_options,
-                    index=(
-                        scatter_options.index("Comunicaciones")
-                        if "Comunicaciones" in scatter_options
-                        else 0
-                    ),
-                )
 
-                x_coord_value = prediction_df[selected_scatter_axis].iloc[0]
-
-                scatter_fig = px.scatter(
+                # Histograma
+                fig_hist = px.histogram(
                     historic_df,
-                    x=selected_scatter_axis,
-                    y="precio_vivienda",
-                    color="comunidad",
-                    opacity=0.45,
-                    title=f"Impacto de {selected_scatter_axis} en el IPV",
-                    labels={
-                        selected_scatter_axis: selected_scatter_axis,
-                        "precio_vivienda": "IPV",
-                    },
+                    x="precio_vivienda",
+                    nbins=30,
+                    title="Distribución histórica del IPV + tu escenario",
+                    labels={"precio_vivienda": "IPV"},
+                    color_discrete_sequence=["#97C2FC"],
                 )
-                scatter_fig.add_scatter(
-                    x=[x_coord_value],
-                    y=[predicted_ipv],
-                    mode="markers+text",
-                    marker=dict(
-                        color="red",
-                        size=16,
-                        symbol="star",
-                        line=dict(color="black", width=1),
-                    ),
-                    text=["Tu escenario"],
-                    textposition="top center",
-                    textfont=dict(color="red", size=11),
-                    name="Predicción",
-                    showlegend=False,
+                fig_hist.add_vline(
+                    x=predicted_ipv,
+                    line_dash="solid",
+                    line_color="red",
+                    line_width=2,
+                    annotation_text="tu escenario",
+                    annotation_font_color="red",
                 )
-                scatter_fig.update_layout(margin=dict(t=40, b=10))
-                st.plotly_chart(scatter_fig, width="stretch")
-                st.caption(
-                    "💡 **Cómo leer esto:** Cada punto es un registro histórico. Si tu estrella roja se aleja de la 'nube', tu escenario plantea una situación económica que rara vez ha ocurrido en la realidad."
+                fig_hist.update_layout(margin=dict(t=40, b=10))
+
+                st.plotly_chart(
+                    fig_hist,
+                    width="stretch",
+                    height=230,
                 )
+                chart_caption(
+                    "**Cómo leer este gráfico:** Las barras azules muestran la frecuencia histórica de los precios de vivienda en España. La línea roja indica dónde se sitúa tu escenario. Si cae en un extremo, significa que predice un mercado inmobiliario inusualmente barato o caro."
+                )
+
+    # --- Gráfico Inferior a todo ancho: Scatter Plot---
+    if historic_df is not None:
+        with st.container(border=True):
+            st.markdown("**Analiza tu escenario en perspectiva**")
+
+            # El usuario elige con qué variable comparar el IPV
+            scatter_options = [col for col in expected_model_cols if col != "comunidad"]
+            selected_scatter_axis = st.selectbox(
+                "Elige la métrica para comparar en el gráfico:",
+                scatter_options,
+                index=(
+                    scatter_options.index("Comunicaciones")
+                    if "Comunicaciones" in scatter_options
+                    else 0
+                ),
+            )
+
+            scatter_fig = px.scatter(
+                historic_df,
+                x=selected_scatter_axis,
+                y="precio_vivienda",
+                color="comunidad",
+                opacity=0.45,
+                title=f"Impacto de {selected_scatter_axis} en el IPV",
+                labels={
+                    selected_scatter_axis: selected_scatter_axis,
+                    "precio_vivienda": "IPV",
+                },
+            )
+            scatter_fig.add_scatter(
+                x=[prediction_df[selected_scatter_axis].iloc[0]],
+                y=[predicted_ipv],
+                mode="markers+text",
+                marker=dict(
+                    color="red",
+                    size=16,
+                    symbol="star",
+                    line=dict(color="black", width=1),
+                ),
+                text=["Tu escenario"],
+                textposition="top center",
+                textfont=dict(color="red", size=11),
+                name="Predicción",
+                showlegend=False,
+            )
+            scatter_fig.update_layout(margin=dict(t=40, b=10))
+            st.plotly_chart(scatter_fig, width="stretch")
+            chart_caption(
+                "**Cómo leer esto:** Cada punto es un registro histórico. Si tu estrella roja se aleja de la 'nube', tu escenario plantea una situación económica que rara vez ha ocurrido en la realidad."
+            )

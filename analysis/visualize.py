@@ -1,4 +1,6 @@
 # ETL Fase 3: Visualización con Plotly
+import textwrap
+
 import polars as pl
 import plotly.express as px
 import plotly.graph_objects as go
@@ -10,7 +12,6 @@ project_root = os.path.dirname(current_dir)
 data_dir = os.path.join(project_root, "data_output")
 csv_dir = os.path.join(data_dir, "csv")
 os.makedirs(os.path.join(data_dir, "graphics"), exist_ok=True)
-
 
 
 def generate_plotly_charts():
@@ -77,9 +78,20 @@ def generate_plotly_charts():
             xaxis_title="Año",
             yaxis_title="Índice de Crecimiento (Base 100)",
             hovermode="x unified",
+            legend=dict(
+                orientation="h",    # 'h' de horizontal
+                yanchor="top",      # Se ancla la parte superior de la leyenda
+                y=-0.2,             # Posición vertical (negativo para que baje del eje X)
+                xanchor="center",   # Se ancla el centro de la leyenda
+                x=0.5               # Posición horizontal (0.5 es el centro del gráfico)
+            ),
+            # Ajustamos el margen inferior para que la leyenda no se corte
+            margin=dict(b=100)
         )
 
-        fig2.write_html(os.path.join(data_dir, "graphics", "2_vivienda_vs_salarios.html"))
+        fig2.write_html(
+            os.path.join(data_dir, "graphics", "2_vivienda_vs_salarios.html")
+        )
 
         # -------------------------------------------------------------------
         # GRÁFICO 3: Brecha Salarial por Ocupación
@@ -93,6 +105,28 @@ def generate_plotly_charts():
 
         # Ordenamos de menor a mayor brecha para que el gráfico quede escalonado visualmente
         df_gap_latest = df_gap_latest.sort("brecha_porcentual")
+
+        job_mapping = {
+            "Trabajadores cualificados de las industrias manufactureras, excepto operadores de instalaciones y máquinas": "Trab. cualificados industria",
+            "Operadores de instalaciones y maquinaria fijas, y montadores": "Operadores de maquinaria fija",
+            "Trabajadores no cualificados en servicios (excepto transportes)": "No cualificados (Servicios)",
+            "Trabajadores de los servicios de salud y el cuidado de personas": "Cuidado de personas y salud",
+            "Trabajadores de los servicios de protección y seguridad": "Protección y seguridad",
+            "Directores y gerentes": "Directores y gerentes",
+            "Peones de la agricultura, pesca, construcción, industrias manufactureras y transportes": "Peones (Agric., Constr., Ind.)",
+            "Técnicos; profesionales de apoyo": "Técnicos y prof. de apoyo",
+            "Trabajadores de los servicios de restauración y comercio": "Restauración y comercio",
+            "Empleados de oficina que atienden al público": "Oficinistas (Atención público)",
+            "Otros técnicos y profesionales científicos e intelectuales": "Otros técnicos/profesionales",
+            "Empleados de oficina que no atienden al público": "Oficinistas (Sin atención al público)",
+            "Conductores y operadores de maquinaria móvil": "Conductores y op. maquinaria móvil",
+            "Técnicos y profesionales científicos e intelectuales de la salud y la enseñanza": "Profesionales salud y enseñanza",
+        }
+
+        # 2. Reemplazamos los nombres largos por los cortos en el dataframe
+        df_gap_latest = df_gap_latest.with_columns(
+            pl.col("ocupacion").replace_strict(job_mapping, default=pl.col("ocupacion"))
+        )
 
         fig3 = px.bar(
             df_gap_latest,
@@ -110,7 +144,8 @@ def generate_plotly_charts():
         fig3.add_vline(x=0, line_dash="dash", line_color="black")
 
         fig3.update_layout(
-            yaxis=dict(tickmode="linear")
+            yaxis=dict(tickmode="linear"),
+            coloraxis_showscale=False,
         )  # Fuerza a que se lean todas las ocupaciones
 
         fig3.write_html(os.path.join(data_dir, "graphics", "3_brecha_salarial.html"))
@@ -119,7 +154,9 @@ def generate_plotly_charts():
         # GRÁFICO 4: Scatter Plot Animado (Curva Salarial)
         # -------------------------------------------------------------------
         print("4/8 Renderizando animación de la Curva Salarial.")
-        df_unemployment_salaries = pl.read_csv(os.path.join(csv_dir, "Relacion_Paro_Salarios.csv"))
+        df_unemployment_salaries = pl.read_csv(
+            os.path.join(csv_dir, "Relacion_Paro_Salarios.csv")
+        )
 
         fig4 = px.scatter(
             df_unemployment_salaries,
@@ -144,7 +181,7 @@ def generate_plotly_charts():
 
         # Ponemos los puntos más grandes y bonitos
         fig4.update_traces(
-            marker=dict(size=14, opacity=0.8, line=dict(width=1, color="DarkSlateGrey"))
+            marker=dict(size=14, opacity=0.8, line=dict(width=1, color="DarkSlateGrey")),
         )
 
         # Aumentamos el tiempo de la animación para que no vaya tan rápido
@@ -156,8 +193,10 @@ def generate_plotly_charts():
         # GRÁFICO 4.B: Correlación Paro-Salario por CCAA
         # -------------------------------------------------------------------
         print("5/8 Pintando matriz de correlaciones.")
-        df_correlation = pl.read_csv(os.path.join(csv_dir, "Correlacion_Paro_Salarios.csv"))
-        
+        df_correlation = pl.read_csv(
+            os.path.join(csv_dir, "Correlacion_Paro_Salarios.csv")
+        )
+
         fig_corr = px.bar(
             df_correlation,
             x="correlacion_pearson",
@@ -181,13 +220,17 @@ def generate_plotly_charts():
         # Forzamos que se vean todos los nombres de las CCAA
         fig_corr.update_layout(yaxis=dict(tickmode="linear"))
 
-        fig_corr.write_html(os.path.join(data_dir, "graphics", "4b_correlacion_paro_salarios.html"))
+        fig_corr.write_html(
+            os.path.join(data_dir, "graphics", "4b_correlacion_paro_salarios.html")
+        )
 
         # -------------------------------------------------------------------
         # GRÁFICO 5: Salario Nominal vs Salario Real (Deflactado)
         # -------------------------------------------------------------------
         print("6/8 Visualizando Ilusión Monetaria...")
-        df_real_salary = pl.read_csv(os.path.join(csv_dir, "Salario_Nominal_vs_Real.csv"))
+        df_real_salary = pl.read_csv(
+            os.path.join(csv_dir, "Salario_Nominal_vs_Real.csv")
+        )
 
         fig5 = go.Figure()
 
@@ -222,9 +265,20 @@ def generate_plotly_charts():
             xaxis_title="Año",
             yaxis_title="Euros (€)",
             hovermode="x unified",  # Al pasar el ratón, compara los dos valores del año de golpe
+            legend=dict(
+                orientation="h",    # 'h' de horizontal
+                yanchor="top",      # Se ancla la parte superior de la leyenda
+                y=-0.2,             # Posición vertical (negativo para que baje del eje X)
+                xanchor="center",   # Se ancla el centro de la leyenda
+                x=0.5               # Posición horizontal (0.5 es el centro del gráfico)
+            ),
+            # Ajustamos el margen inferior para que la leyenda no se corte
+            margin=dict(b=100)
         )
 
-        fig5.write_html(os.path.join(data_dir, "graphics", "5_salario_nominal_vs_real.html"))
+        fig5.write_html(
+            os.path.join(data_dir, "graphics", "5_salario_nominal_vs_real.html")
+        )
 
         # -------------------------------------------------------------------
         # GRÁFICO 6: Calidad del Empleo (Área Apilada)
@@ -283,7 +337,9 @@ def generate_plotly_charts():
         # Añadimos interactividad unificada para ver todos los sueldos a la vez al pasar el ratón
         fig7.update_layout(hovermode="x unified")
 
-        fig7.write_html(os.path.join(data_dir, "graphics", "7_desigualdad_salarial.html"))
+        fig7.write_html(
+            os.path.join(data_dir, "graphics", "7_desigualdad_salarial.html")
+        )
 
         # -------------------------------------------------------------------
         # GRÁFICO 8: Evolución del Paro por CCAA (Gráfico Facetado)
@@ -299,8 +355,12 @@ def generate_plotly_charts():
             labels={"tasa_paro_media": "Paro (%)", "anio": "Año"},
         )
 
-        # Quitamos la etiqueta redundante de "comunidad=" en cada sub-título
+        # 1. Quitamos la etiqueta redundante de "comunidad=" en cada sub-título
         fig8.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+
+        # 2. BORRAMOS los títulos de los ejes X e Y en cada minigráfico para evitar que se aplasten
+        fig8.for_each_yaxis(lambda y: y.update(title=""))
+        fig8.for_each_xaxis(lambda x: x.update(title=""))
 
         fig8.write_html(os.path.join(data_dir, "graphics", "8_paro_facetado.html"))
 

@@ -10,12 +10,26 @@ st.set_page_config(
 
 # 2. Importación de las vistas
 from views.tab1_inicio import show_home
-from views.tab2_poder_adquisitivo import show_poder_adquisitivo
+from views.tab2_poder_adquisitivo import show_purchasing_power
 from views.tab3_analisis_territorial import show_analisis_territorial
 from views.tab4_mercado_laboral import show_mercado_laboral
 from views.tab5_explorar_datos import show_explore_data
 from views.tab6_modelos_ml import show_modelos_ml
 from views.tab7_info_proyecto import show_project_info
+
+TABS = {
+    "🏠 Inicio":               show_home,
+    #"💰 Poder Adquisitivo":    show_purchasing_power,
+    "🗺️ Análisis Territorial": show_analisis_territorial,
+    "👷 Mercado Laboral":      show_mercado_laboral,
+    "🗄️ Explorar datos":       show_explore_data,
+    "🤖 Modelos ML":           show_modelos_ml,
+    "ℹ️ Sobre el Proyecto":    show_project_info,
+}
+
+if "nav_pill" not in st.session_state:
+    st.session_state["nav_pill"] = "🏠 Inicio"
+
 
 # --- SIDEBAR (Menú lateral) ---
 with st.sidebar:
@@ -25,44 +39,20 @@ with st.sidebar:
     st.divider()
 
     # Navegación
-    opcion_seleccionada = st.pills(
+    selected = st.pills(
         "Navegación",
-        [
-            "🏠 Inicio",
-            "💰 Poder Adquisitivo",
-            "🗺️ Análisis Territorial",
-            "👷 Mercado Laboral",
-            "🗄️ Explorar datos",
-            "🤖 Modelos ML",
-            "ℹ️ Sobre el Proyecto",
-        ],
-        default="🏠 Inicio",
+        list(TABS.keys()),
         selection_mode="single",
         label_visibility="hidden",
+        key="nav_pill", 
     )
 
+    if selected is not None:
+        st.session_state.active_tab = selected
+
     st.divider()
-    st.caption("Desarrollado para el proyecto final de Data Science.")
+    st.caption("Desarrollado para el proyecto final de Sistemas de Big Data")
 
 # --- CONTROLADOR DE VISTAS ---
-# Según la opción del menú, ejecutamos la función de su archivo correspondiente
-if opcion_seleccionada == "🏠 Inicio":
-    show_home()
-
-elif opcion_seleccionada == "💰 Poder Adquisitivo":
-    show_poder_adquisitivo()
-
-elif opcion_seleccionada == "🗺️ Análisis Territorial":
-    show_analisis_territorial()
-
-elif opcion_seleccionada == "👷 Mercado Laboral":
-    show_mercado_laboral()
-
-elif opcion_seleccionada == "🗄️ Explorar datos":
-    show_explore_data()
-
-elif opcion_seleccionada == "🤖 Modelos ML":
-    show_modelos_ml()
-
-elif opcion_seleccionada == "ℹ️ Sobre el Proyecto":
-    show_project_info()
+active_tab = st.session_state.nav_pill or "🏠 Inicio"
+TABS[active_tab]()

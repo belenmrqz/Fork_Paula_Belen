@@ -1,46 +1,35 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import json
-import requests
-from pathlib import Path
-import streamlit.components.v1 as components
-
-# ── FUNCIONES DE CARGA Y PROCESAMIENTO ────────────────────────────────────
-
-def mostrar_grafico_html(ruta_archivo):
-    """Lee y muestra un archivo HTML exportado previamente por Plotly"""
-    path = Path(ruta_archivo)
-    if path.exists():
-        html_content = path.read_text(encoding="utf-8")
-        components.html(
-            html_content,
-            height=500,
-        )
-    else:
-        st.warning(f"No se encontró el gráfico: {ruta_archivo}")
-
-@st.cache_data
-def load_territorial_data():
-    df_salarios = pd.read_csv("data_output/csv/Evolucion_Salario_Comunidades.csv")
-    return df_salarios
-
-@st.cache_data
-def load_geojson():
-    url = "https://raw.githubusercontent.com/R-CoderDotCom/data/main/shapefile_spain/spain.geojson"
-    respuesta = requests.get(url)
-    return respuesta.json()
+from utils.charts import render_html, chart_caption
+from utils.data import load_csv, load_geojson, get_last_year, rename_cols
+from config.constantes import CCAA_RENAME_GEOJSON
 
 # ── VISTA PRINCIPAL ────────────────────────────────────────────────────────
 
 def show_analisis_territorial():
     st.title("Análisis territorial")
-    st.markdown("Desglose por Comunidades Autónomas · salarios, paro y poder adquisitivo")
+    st.markdown(
+        "Desglose por Comunidades Autónomas · salarios, paro y poder adquisitivo"
+    )
 
     try:
-        df_salarios = load_territorial_data()
-        nombre_col_salario = "salario_medio" 
-        df_2023 = df_salarios[df_salarios["anio"] == 2023].sort_values(by=nombre_col_salario, ascending=False)
+        salaries_df = load_csv("Evolucion_Salario_Comunidades.csv")
+        # 1. Obtenemos el último año dinámicamente
+        last_year = get_last_year(salaries_df)
+
+        # 2. Filtramos y ordenamos
+        last_year_df = salaries_df[
+            (salaries_df["anio"] == last_year)
+            & (salaries_df["comunidad"] != "Total Nacional")
+        ].sort_values(by="salario_medio", ascending=False)
+
+        # 3. Calculamos métricas dinámicas para los KPIs
+        top = last_year_df.iloc[0]
+        bot = last_year_df.iloc[-1]
+        gat_pct = ((top["salario_medio"] / bot["salario_medio"]) - 1) * 100
+        ccaa_count = last_year_df["comunidad"].nunique()
+
     except Exception as e:
         st.error(f"Error cargando datos: {e}")
         return
@@ -50,84 +39,112 @@ def show_analisis_territorial():
 
     with col1:
         with st.container(border=True):
-            st.metric(label="CCAA con salario más alto", value="País Vasco", delta="32.100 €/año", delta_color="off")
+            st.metric(
+                label="Salario más alto",
+                value=top["comunidad"],
+                delta=f"{top['salario_medio']:,.0f} €/año".replace(",", "."),
+                delta_color="green",
+                delta_arrow="off",
+            )
     with col2:
         with st.container(border=True):
-            st.metric(label="CCAA con salario más bajo", value="Extremadura", delta="21.400 €/año", delta_color="off")
+            st.metric(
+                label="Salario más bajo",
+                value=bot["comunidad"],
+                delta=f"{bot['salario_medio']:,.0f} €/año".replace(",", "."),
+                delta_color="red",
+                delta_arrow="off",
+            )
     with col3:
         with st.container(border=True):
-            st.metric(label="Brecha territorial", value="+50%", delta="entre extremos", delta_color="off")
+            st.metric(
+                label="Brecha territorial",
+                value=f"+{gat_pct:.1f}%",
+                delta="entre extremos",
+                delta_color="red",
+                delta_arrow="off",
+            )
     with col4:
         with st.container(border=True):
-            st.metric(label="CCAA analizadas", value="19", delta="datos INE 2008-2023", delta_color="off")
-
-    st.write("")
+            st.metric(
+                label="CCAA analizadas",
+                value=ccaa_count,
+                delta=f"Dato de {last_year}",
+                delta_color="off",
+                delta_arrow="off",
+            )
 
     # --- FILA 1: Mapa y Ranking ---
     row1_col1, row1_col2 = st.columns([3, 2])
-    
+
     with row1_col1:
         with st.container(border=True):
-            st.markdown("**Mapa de salarios · CCAA**")
+            st.markdown(f"**Mapa de salarios · CCAA {last_year}**")
             try:
                 geojson = load_geojson()
-                traduccion_nombres = {
-                    "Madrid, Comunidad de": "Comunidad de Madrid",
-                    "Navarra, Comunidad Foral de": "Comunidad Foral de Navarra",
-                    "Asturias, Principado de": "Principado de Asturias",
-                    "Rioja, La": "La Rioja",
-                    "Murcia, Región de": "Región de Murcia",
-                    "Balears, Illes": "Islas Baleares",
-                    "Comunitat Valenciana": "Comunidad Valenciana",
-                    "Castilla - La Mancha": "Castilla-La Mancha",
-                    "Canarias": "Islas Canarias"
-                }
-                
-                df_mapa = df_2023.copy()
-                df_mapa["comunidad"] = df_mapa["comunidad"].replace(traduccion_nombres)
-                
-                fig_map = px.choropleth(
-                    df_mapa, 
-                    geojson=geojson, 
-                    locations='comunidad', 
-                    featureidkey="properties.name", 
-                    color=nombre_col_salario, 
-                    color_continuous_scale="Blues"
+
+                map_df = last_year_df.copy()
+                map_df["comunidad"] = map_df["comunidad"].replace(CCAA_RENAME_GEOJSON)
+
+                fig_map = px.choropleth_map(
+                    map_df,
+                    geojson=geojson,
+                    locations="comunidad",
+                    featureidkey="properties.name",
+                    color="salario_medio",
+                    color_continuous_scale="Blues",
+                    map_style="carto-positron",
+                    zoom=4.7,
+                    center={"lat": 40.0, "lon": -3.0},
                 )
                 fig_map.update_geos(fitbounds="locations", visible=False)
-                fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-                st.plotly_chart(fig_map, use_container_width=True)
+                fig_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+                st.plotly_chart(fig_map, width="stretch")
             except Exception as e:
                 st.warning(f"Error cargando el mapa: {e}")
-                
+
     with row1_col2:
         with st.container(border=True):
-            st.markdown("**Ranking CCAA (2023)**")
-            st.dataframe(
-                df_2023[["comunidad", nombre_col_salario]], 
-                use_container_width=True, 
-                hide_index=True
-            )
+            st.markdown(f"**Ranking CCAA ({last_year})**")
 
-    st.write("")
+            ranking_df = last_year_df[["comunidad", "salario_medio"]].copy()
+
+            # Creamos una columna de posición numérica (Top 1, 2, 3...)
+            rank_positions = range(1, len(ranking_df) + 1)
+            ranking_df.insert(0, "Top", rank_positions)
+
+            st.dataframe(
+                rename_cols(ranking_df),
+                width="stretch",
+                hide_index=True,
+            )
 
     # --- FILA 2: Curva de Phillips y Correlación ---
     row2_col1, row2_col2 = st.columns(2)
-    
+
     with row2_col1:
         with st.container(border=True):
             st.markdown("**Curva de Phillips regional · paro vs salario**")
-            mostrar_grafico_html("data_output/graphics/4_paro_vs_salarios.html")
-            st.caption("💡 **Cómo interpretar:** Muestra si existe una relación entre un mayor nivel de paro y salarios más bajos en las distintas regiones.")
+            render_html("4_paro_vs_salarios.html")
+            chart_caption(
+                "Usa el botón Play o mueve la barra de tiempo para ver la evolución. "
+                "Cada burbuja es una CCAA. En los años de crisis (ej. 2012) las burbujas "
+                "salen disparadas hacia la derecha."
+            )
 
     with row2_col2:
         with st.container(border=True):
             st.markdown("**Correlación de Pearson por CCAA**")
-            mostrar_grafico_html("data_output/graphics/4b_correlacion_paro_salarios.html")
-
-    st.write("")
-
+            render_html("4b_correlacion_paro_salarios.html")
+            chart_caption(
+                "El coeficiente oscila entre -1 y +1. "
+                "Cercano a -1 indica relación inversa fuerte: a más paro, menos salario."
+            )
     # --- FILA 3: Evolución Salarial ---
     with st.container(border=True):
         st.markdown("**Evolución salarial por CCAA**")
-        mostrar_grafico_html("data_output/graphics/1_evolucion_salarios.html")
+        render_html("1_evolucion_salarios.html")
+        chart_caption(
+            "Haz doble clic sobre una comunidad en la leyenda para aislarla. "
+            "Después, un clic normal en otras permite compararlas."
+        )

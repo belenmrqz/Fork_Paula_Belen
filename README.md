@@ -4,10 +4,12 @@
 
 El objetivo principal de este proyecto es analizar la evolución del poder adquisitivo de la clase trabajadora en España mediante un sistema automatizado de **Ingeniería y Análisis de Datos**.
 
-El proyecto implementa un pipeline completo **End-to-End** que abarca:
-1.  **Fase 1 (Data Engineering):** Un proceso ETL que recopila datos macroeconómicos de la API del INE y los modela en una base de datos relacional (SQLite).
-2.  **Fase 2 (Data Preparation):** Procesamiento multihilo, transformación de datos en memoria utilizando y exportación a CSV/Parquet **Polars**.
-3.  **Fase 3 (Data Analytics & Dataviz):** Generación de visualizaciones interactivas de conclusiones con **Plotly**.
+El proyecto implementa un pipeline completo **End-to-End** que abarca 5 grandes fases:
+1. **Fase 1 (Data Engineering):** Un proceso ETL que recopila datos macroeconómicos de la API del INE y los modela en una base de datos relacional (SQLite).
+2. **Fase 2 (Data Preparation):** Procesamiento de datos en memoria de alto rendimiento y exportación a la Capa Oro (CSV/Parquet) utilizando **Polars**.
+3. **Fase 3 (Data Analytics & Business Intelligence):** Generación de visualizaciones interactivas con **Plotly** y desarrollo de Cuadros de Mando y *Storytelling* narrativo con **Tableau**.
+4. **Fase 4 (Machine Learning):** Desarrollo de modelos para la segmentación socioeconómica territorial (Clustering K-Means) y la predicción del precio de la vivienda (Gradient Boosting).
+5. **Fase 5 (Despliegue Web):** Integración de todos los análisis, bases de datos y modelos predictivos en un Dashboard interactivo desarrollado con **Streamlit**.
 
 El sistema permite desglosar la información por **Comunidades Autónomas**, sectores de actividad y grupos socioeconómicos, demostrando matemáticamente relaciones entre el paro, los salarios y la inflación.
 
@@ -121,38 +123,27 @@ erDiagram
 
 ## ⚙️ Arquitectura y Flujo del Pipeline End-to-End
 
-Este proyecto se ha construido siguiendo una arquitectura modular y orientada a objetos (OOP), diseñada para facilitar el mantenimiento, la escalabilidad y la trazabilidad del dato. El proceso completo se divide en tres grandes fases controladas por el orquestador interactivo main.py:
+El proyecto sigue una **arquitectura desacoplada**: un Backend (Pipeline ETL y Machine Learning) que procesa y digiere los datos de forma pesada, y un Frontend (Streamlit) ligero que consume los resultados estáticos (Capa Oro) para maximizar el rendimiento web.
 
-### 1. Estructura de Ficheros
-El código se organiza separando claramente la configuración, la lógica de extracción (Fase 1) y el análisis (Fase 2 y 3):
+### 1. Estructura de Ficheros (Vista General)
+El código se organiza en la raíz mapeando directamente las 5 fases del proyecto:
 
 ```text
 📁 Proyecto
-├── 📄 main.py               # Orquestador Central CLI: Bucle ETL, Polars y Plotly.
-├── 📁 config
-│   └── 📄 constantes.py     # Códigos ID de las tablas API del INE.
-├── 📁 src                   # FASE 1: INGESTA Y ALMACENAMIENTO
-│   ├── 📄 db.py             # Patrón Singleton para conexión y creación de esquema.
-│   ├── 📄 inedata.py        # EXTRACT: Clase para conexión HTTP y descarga JSON.
-│   ├── 📄 procesar.py       # TRANSFORM: Limpieza, filtrado y lógica de negocio.
-│   └── 📄 almacenar.py      # LOAD: Inserción masiva con control de duplicados.
-├── 📁 analysis              # FASE 2 y 3: PREPARACIÓN Y VISUALIZACIÓN
-│   ├── 📄 transform.py      # Script de Polars (Deflactación, cruces, agregaciones).
-│   └── 📄 visualize.py      # Script de Plotly (Generación de HTMLs interactivos).
-├── 📁 models_training       # FASE 4: MACHINE LEARNING (MODELADO PREDICTIVO)
-│   ├── 📄 clustering.py     # Modelo K-Means para segmentación socioeconómica (Regiones).
-│   └── 📄 regression.py     # Torneo de modelos (AutoML) para predecir el Precio de la Vivienda.
-├── 📁 data_output           # CAPA ORO: Resultados finales
-│   ├── 📁 csv               # Datasets limpios (.csv) listos para ML y Tableau.
-│   ├── 📁 parquet           # Datasets comprimidos y optimizados (.parquet).
-│   ├── 📁 graphics          # Gráficos interactivos de Plotly exportados en .html.
-│   └── 📄 index.html        # Dashboard web interactivo para navegar por los gráficos.
-├── 📁 assets                # Imágenes, capturas y recursos estáticos para el README.
+├── 📄 main.py               # Orquestador Central CLI: Ejecuta el pipeline de datos (Backend).
+├── 📄 app.py                # Orquestador Web: Lanza el Dashboard interactivo (Frontend).
+├── 📁 src                   # FASE 1: Ingesta, transformación y carga en SQLite.
+├── 📁 analysis              # FASE 2 y 3: Preparación con Polars y gráficas con Plotly.
+├── 📁 models_training       # FASE 4: Entrenamiento de Machine Learning (K-Means y Gradient Boosting).
+├── 📁 data_output           # CAPA ORO: Base de datos final, CSVs, Parquets, Modelos y HTMLs.
+├── 📁 views                 # FASE 5: Vistas individuales de la interfaz web (Streamlit).
+├── 📁 utils                 # Módulos transversales compartidos (Caché, Helpers, CSS).
+├── 📁 config                # Diccionarios, rutas, constantes y configuraciones globales.
+├── 📁 assets                # Recursos estáticos (Imágenes para el README, estilos CSS).
 ├── 📄 Actividad_3.2...twbx  # Cuadro de mando interactivo empaquetado (Tableau).
 ├── 📄 proyecto_datos.db     # Base de datos local resultante (SQLite).
 ├── 📄 pyproject.toml        # Configuración moderna del proyecto y gestor de paquetes.
 ├── 📄 requirements.txt      # Dependencias bloqueadas con Hashes de seguridad (uv).
-├── 📄 uv.lock               # Archivo de bloqueo para entornos reproducibles.
 └── 📄 README.md             # Documentación principal y conclusiones del proyecto.
 ```
 
@@ -395,7 +386,6 @@ La Inteligencia Artificial ha dividido España en tres realidades socioeconómic
 Para la presentación de los resultados, se ha desarrollado un mapa de coropletas interactivo utilizando la librería Plotly.js
 
 
-
 ### Parte 2: Regresión (Predicción del Precio de la Vivienda)
 Mientras que el Clustering nos ha permitido entender la estructura socioeconómica actual, el objetivo de esta segunda fase es predictivo: ¿Podemos estimar el Índice de Precios de la Vivienda (IPV) basándonos en el entorno económico (salarios, inflación, tasas de paro) de una región? 
 Dado que nuestro objetivo es predecir una cifra exacta (el precio de la vivienda) y no simplemente agrupar datos, hemos diseñado un proceso analítico basado en modelos de Regresión.
@@ -442,6 +432,58 @@ Es importante destacar que, dentro del IPC, la categoría de "Comunicaciones" en
 
 * **3. La desconexión entre los salarios locales y el encarecimiento inmobiliario**: Variables macroeconómicas tradicionales que a priori parecían determinantes, como el **salario medio** (`salario_medio`) o la **tasa de paro** (`tasa_paro_media`) tienen un peso secundario (por debajo de 0.1). Esto valida la hipótesis de que, en muchas regiones, el precio de la vivienda sube impulsado por factores externos (turismo, rentas altas, sector servicios) sin que los salarios de la población local crezcan al mismo ritmo. Esto explica la grave pérdida de poder adquisitivo que sufre gran parte de la ciudadanía.
 
+## Fase 5: Dashboard Interactivo en (Streamlit)
+La fase final del proyecto integra todos los resultados anteriores en una aplicación web local desarrollada con **Streamlit**, permitiendo explorar los datos, visualizaciones y modelos sin necesidad de ejecutar código.
+
+### Arquitectura de la aplicación
+La app sigue una arquitectura **modular por vistas**, con un orquestador central (`app.py`) que gestiona la navegación y delega el renderizado a módulos independientes. Las funciones reutilizables (carga de datos, renderizado de gráficos, constantes) están centralizadas en la carpeta `utils/` para evitar duplicación.
+
+```text
+📁 Proyecto
+├── 📄 app.py                            # Orquestador: configuración, sidebar y router de vistas.
+├── 📁 views                             # Una vista por sección del dashboard
+│   ├── 📄 tab1_inicio.py                # KPIs globales y gráficos de tendencia principal.
+│   ├── 📄 tab2_poder_adquisitivo.py     # Inflación, ilusión monetaria y desigualdad.
+│   ├── 📄 tab3_analisis_territorial.py  # Mapa coropletas, ranking y Curva de Phillips.
+│   ├── 📄 tab4_mercado_laboral.py       # Temporalidad, brecha salarial y paro por edad.
+│   ├── 📄 tab5_explorar_datos.py        # Explorador interactivo de la Capa Oro.
+│   ├── 📄 tab6_modelos_ml.py            # Clustering K-Means y Simulador IPV.
+│   └── 📄 tab7_info_proyecto.py         # Fuentes, arquitectura y equipo.
+└── 📁 utils                             # Módulos de utilidades compartidas
+    ├── 📄 data.py                       # Funciones cacheadas de carga (CSV, GeoJSON, modelos).
+    └── 📄 charts.py                     # render_html() y chart_caption() reutilizables.
+```
+
+### Decisiones técnicas destacadas
+
+* **`@st.cache_data` y `@st.cache_resource`**: Todos los CSVs, GeoJSONs y 
+  artefactos de ML se cachean en memoria RAM. El pipeline de datos solo se 
+  ejecuta una vez por sesión, independientemente de cuántas veces el usuario 
+  cambie de pestaña.
+
+* **Navegación sin recargas innecesarias**: La navegación lateral usa 
+  `st.pills` con `key=` y `st.session_state` para persistir la pestaña 
+  activa entre interacciones, evitando el comportamiento de deselección 
+  (retorno a `None`) propio del widget.
+
+* **Integración de Plotly HTML**: Los gráficos generados en la Fase 3 
+  (archivos `.html` exportados por `visualize.py`) se renderizan directamente 
+  en la app mediante `st.iframe()`, manteniendo toda su 
+  interactividad original (zoom, tooltips, Play animado).
+
+* **Simulador predictivo interactivo**: El modelo Gradient Boosting entrenado 
+  en la Fase 4 se carga con `joblib` y permite al usuario construir escenarios 
+  socioeconómicos personalizados en tiempo real. Los sliders se pre-rellenan 
+  automáticamente con la media del año 2023 de la Comunidad Autónoma 
+  seleccionada. La predicción persiste en `st.session_state` al cambiar de 
+  pestaña.
+
+* **Explorador de Capa Oro**: La pestaña de datos expone los 9 datasets 
+  finales con filtros dinámicos automáticos (categóricos → checkboxes, 
+  numéricos → sliders de rango), buscador de texto libre y exportación en 
+  CSV y Parquet sin requerir conocimientos técnicos.
+
+
 ## 🚀 Instalación y Uso
 
 Sigue estos pasos para desplegar el proyecto en tu entorno local:
@@ -454,7 +496,7 @@ cd Fork_Paula_Belen
 ```
 
 ### 2. Configurar el entorno virtual con `uv`
-Se recomiendo usar `uv` por su velocidad en la gestión de dependencias:
+Se recomienda usar `uv` por su velocidad en la gestión de dependencias:
 * **En macOS / Linux**:
     ```bash
     uv venv
@@ -472,11 +514,25 @@ Instala las librerías utilizando el archivo que contiene los hashes de segurida
 uv pip install -r requirements.txt
 ```
 
-### 4. Ejecutar el Orquestados
+### 4. Ejecutar el Orquestador
 Lanza el script principal. Aparecerá un panel de control interactivo en la terminal. Pulsa la opción 4 para ejecutar el pipeline completo de principio a fin:
 ```bash
 python main.py
 ```
+
+### 5. Ejecutar el dashboard
+
+Con el entorno virtual activo y las dependencias instaladas, lanza la interfaz web:
+
+```bash
+uv run streamlit run app.py
+```
+
+La app estará disponible en `http://localhost:8501`. 
+
+(Nota: Es necesario haber ejecutado previamente el pipeline completo -opción 4 de `main.py`- para que existan los archivos de la Capa Oro y los modelos entrenados en 
+`data_output/` que consume el Dashboard).
+
 ---
 
 ## 🤝 Colaboradores

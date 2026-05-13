@@ -1,119 +1,149 @@
-import streamlit as st
 import pandas as pd
-from pathlib import Path
-import streamlit.components.v1 as components
+import streamlit as st
 import plotly.express as px
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-
-# ── FUNCIONES DE AYUDA Y CARGA ─────────────────────────────────────────────
-def mostrar_grafico_html(ruta_archivo, height=500):
-    """Lee y muestra un archivo HTML exportado previamente por Plotly"""
-    path = Path(ruta_archivo)
-    if path.exists():
-        html_content = path.read_text(encoding="utf-8")
-        components.html(
-            html_content,
-            height=height,
-            scrolling=False
-        )
-    else:
-        st.warning(f"No se encontró el gráfico: {ruta_archivo}")
-
-@st.cache_data
-def load_ml_data():
-    return pd.read_csv("data_output/csv/ML.csv")
+from config.constantes import CLUSTER_COLOR_MAP, CLUSTER_ORDER
+from utils.data import load_csv, load_geojson, get_last_year, rename_cols
+from utils.charts import render_html, chart_caption
 
 # ── VISTA PRINCIPAL DEL CLUSTERING ─────────────────────────────────────────
 def show_clustering():
+    """
+    Renderiza el análisis de segmentación regional mediante K-Means.
+    Permite visualizar grupos de CCAA con realidades socioeconómicas similares.
+    """
     try:
-        df_ml_raw = load_ml_data()
-        ultimo_anio = df_ml_raw['anio'].max()
-        df_ml = df_ml_raw[df_ml_raw['anio'] == ultimo_anio].copy()
+        df_ml = load_csv("ML_clustering.csv")
+        geojson = load_geojson()
+
+        # Convertimos la columna a categórica para asegurar que el orden de los clusters
+        # en la leyenda sea siempre: Óptimo, Intermedio y Vulnerable.
+        df_ml['Estado Financiero'] = pd.Categorical(
+            df_ml['Estado Financiero'], 
+            categories=CLUSTER_ORDER, 
+            ordered=True
+        )
+
+        last_year = get_last_year(df_ml)
+
     except Exception as e:
         st.error(f"Error cargando los datos de ML: {e}")
         return
-
-    # --- ENTRENAMIENTO PARA LAS TABLAS Y GRÁFICOS NATIVOS ---
-    try:
-        features = ['salario_medio', 'tasa_paro_media', 'precio_vivienda']
-        df_ml = df_ml.dropna(subset=features)
-        X = df_ml[features]
-
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-
-        # K-Means con k=3
-        kmeans = KMeans(n_clusters=3, random_state=42)
-        df_ml['cluster'] = kmeans.fit_predict(X_scaled)
-
-        # Calculamos centroides para la tabla
-        df_centroids = pd.DataFrame(scaler.inverse_transform(kmeans.cluster_centers_), columns=features)
-        df_centroids['cluster_num'] = df_centroids.index
-        
-        # Asignamos nombres por lógica
-        df_centroids = df_centroids.sort_values(by='tasa_paro_media')
-        df_centroids['Cluster'] = ['Óptimo', 'Intermedio', 'Vulnerable']
-        
-        mapa_nombres = dict(zip(df_centroids['cluster_num'], df_centroids['Cluster']))
-        df_ml['cluster_name'] = df_ml['cluster'].map(mapa_nombres)
-        
-        df_centroids_mostrar = df_centroids[['Cluster', 'salario_medio', 'tasa_paro_media', 'precio_vivienda']].round(1)
-
-    except Exception as e:
-        st.error(f"Error entrenando el modelo. Detalle: {e}")
-        return
+    st.title("Clustering · Análisis Regional")
 
     # --- FILA 1: Mapa y Centroides ---
-    row1_col1, row1_col2 = st.columns([3, 2])
-    
+    row1_col1, row1_col2 = st.columns(2)
+
     with row1_col1:
         with st.container(border=True):
-            st.markdown(f"**Mapa de clusters · CCAA {ultimo_anio}**")
-            mostrar_grafico_html("data_output/graphics/clustering_graphics/mapa_interactivo_por_ccaa.html", height=500)
+            st.markdown(f"**Mapa de clusters  {last_year}**")
+
+            # Generación del mapa temático basado en los grupos del algoritmo
+            fig_mapa = px.choropleth_map(
+                df_ml,
+                geojson=geojson,
+                featureidkey="properties.name",
+                locations="Nombre_Mapa",
+                color="Estado Financiero",
+                color_discrete_map=CLUSTER_COLOR_MAP,
+                hover_name="comunidad",
+                hover_data={
+                    "Nombre_Mapa": False,
+                    "Estado Financiero": False,
+                    "Salario": True,
+                    "Paro": True,
+                },
+                map_style="carto-positron",
+                zoom=4.7,
+                center={"lat": 40.0, "lon": -3.0},
+            )
+            fig_mapa.update_layout(
+                margin={"r": 0, "t": 0, "l": 0, "b": 0},
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1,
+                    title=None,
+                ),
+            )
+
+            st.plotly_chart(
+                fig_mapa,
+                width="stretch",
+            )
+            chart_caption(
+                "**Cómo interpretar:** Comunidades agrupadas por el algoritmo K-Means. El verde indica el equilibrio ideal entre sueldos altos y desempleo contenido."
+            )
 
     with row1_col2:
         with st.container(border=True):
             st.markdown("**Centroides por cluster**")
-            st.dataframe(df_centroids_mostrar, use_container_width=True, hide_index=True)
-            
+            # Calculamos la media de cada variable por cluster para entender qué define a cada grupo
+            centroids_df = (
+                df_ml.groupby("Estado Financiero", observed=False)[
+                    ["salario_medio", "tasa_paro_media", "precio_vivienda"]
+                ]
+                .mean()
+                .reset_index()
+            )
+            # Mostramos los promedios del grupo con nombres de columna legibles
+            st.dataframe(rename_cols(centroids_df), width="stretch", hide_index=True)
+            chart_caption(
+                "Grupo óptimo: mejor salario pero mayor presión inmobiliaria."
+            )
         with st.container(border=True):
-            st.markdown("**Método del codo · elección de k**")
-            inertias = []
-            K_range = range(1, 9)
-            for k in K_range:
-                km = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
-                inertias.append(km.inertia_)
-            fig_codo = px.line(x=list(K_range), y=inertias, labels={'x': 'k', 'y': 'Inercia'})
-            fig_codo.add_scatter(x=[3], y=[inertias[2]], mode='markers', marker=dict(color='red', size=10), name='k=3')
-            fig_codo.update_layout(height=250, margin=dict(t=10, b=10, l=10, r=10), showlegend=False)
-            st.plotly_chart(fig_codo, use_container_width=True)
-
-    st.write("")
+            st.markdown("**Validación: Método del Codo**")            
+            render_html("clustering_graphics/codo_kmeans.html", height=190)
+            chart_caption(
+                "Elegimos k=3 porque es el punto donde la curva hace 'codo', optimizando el error de agrupación."
+            )
 
     # --- FILA 2: Scatter y Tabla ---
     row2_col1, row2_col2 = st.columns(2)
-    
+
     with row2_col1:
         with st.container(border=True):
-            st.markdown("**Scatter 2D · paro vs salario coloreado por cluster**")
-            color_map = {'Óptimo': '#2ca02c', 'Intermedio': '#ff7f0e', 'Vulnerable': '#d62728'}
-            fig_scatter_ml = px.scatter(
-                df_ml, 
-                x="tasa_paro_media", 
-                y="salario_medio", 
-                color="cluster_name",
-                hover_data=["comunidad"] if "comunidad" in df_ml.columns else [],
-                color_discrete_map=color_map
+            st.markdown("**Relación Salario vs Paro**")
+
+            # Scatter plot para visualizar la separación física de los clusters
+            fig_sc = px.scatter(
+                df_ml,
+                x="tasa_paro_media",
+                y="salario_medio",
+                color="Estado Financiero",
+                hover_name="comunidad",
+                color_discrete_map=CLUSTER_COLOR_MAP,
+                labels={"tasa_paro_media": "Paro (%)", "salario_medio": "Salario (€)"},
             )
-            st.plotly_chart(fig_scatter_ml, use_container_width=True)
+
+            fig_sc.update_layout(
+                margin=dict(t=10, b=10, l=10, r=10),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1,
+                    title=None,
+                ),
+            )
+            st.plotly_chart(fig_sc, width="stretch", height=350)
+            chart_caption(
+                "**Análisis:** Identifica visualmente qué regiones lideran la economía y cuáles presentan mayor vulnerabilidad laboral."
+            )
 
     with row2_col2:
         with st.container(border=True):
-            st.markdown("**CCAA por cluster · tabla detalle**")
-            if "comunidad" in df_ml.columns:
-                cols_to_show = ["comunidad", "cluster_name", "salario_medio", "tasa_paro_media"]
-                df_mostrar = df_ml[cols_to_show].sort_values(by="cluster_name")
-                st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
-            else:
-                st.dataframe(df_ml, use_container_width=True)
+            st.markdown("**Clasificación por CCAA**")
+
+            df_list = df_ml[
+                ["comunidad", "Estado Financiero", "salario_medio", "tasa_paro_media"]
+            ].sort_values(by="Estado Financiero")
+
+            # Tabla final con la asignación individual de cada comunidad autónoma
+            st.dataframe(
+                rename_cols(df_list),
+                width="stretch",
+                hide_index=True,
+            )

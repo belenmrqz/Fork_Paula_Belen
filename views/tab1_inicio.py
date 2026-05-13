@@ -1,69 +1,40 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
-import plotly.express as px
-
-
-# ── FUNCIONES DE CARGA DE DATOS ──────────────────────────────────────────
-@st.cache_data
-def load_nominal_vs_real_salary():
-    # Carga el histórico de salarios nominales y reales
-    return pd.read_csv("data_output/csv/Salario_Nominal_vs_Real.csv")
-
-
-@st.cache_data
-def load_housing_comparison():
-    # Carga la comparativa entre precios de vivienda y salarios
-    return pd.read_csv("data_output/csv/Comparativa_Vivienda_Salario.csv")
+from utils.charts import render_html
+from utils.data import load_csv, get_last_year
 
 
 @st.cache_data
 def get_last_unemployment_rate():
     """Extrae la tasa de paro y calcula la diferencia con el año anterior"""
-    employment_data = pd.read_csv("data_output/csv/T_empleo.csv")
-    period_table = pd.read_csv("data_output/csv/tbl_periodo.csv")
-    indicator_table = pd.read_csv("data_output/csv/tbl_indicador.csv")
-
-    merged_df = employment_data.merge(period_table, on="id_periodo", how="inner")
-    merged_df = merged_df.merge(indicator_table, on="id_indicador", how="inner")
+    merged_df = (
+        load_csv("T_empleo.csv")  # ← load_csv en vez de pd.read_csv manual
+        .merge(load_csv("tbl_periodo.csv"), on="id_periodo", how="inner")
+        .merge(load_csv("tbl_indicador.csv"), on="id_indicador", how="inner")
+    )
 
     # 1. Filtramos primero por indicador, sexo y edad para limpiar la tabla
-    indicator_filter = merged_df["nombre"].str.contains("paro", case=False, na=False)
-    gender_filter = merged_df["sexo"] == "Ambos sexos"
-    age_filter = merged_df["grupo_edad"] == "Todas las edades"
-    unemployment_df = merged_df[indicator_filter & gender_filter & age_filter]
+    unemployment_df = merged_df[
+        merged_df["nombre"].str.contains("paro", case=False, na=False)
+        & (merged_df["sexo"] == "Ambos sexos")
+        & (merged_df["grupo_edad"] == "Total")
+    ]
 
     # 2. Sacamos los años
-    last_year = unemployment_df["anio"].max()
-    previous_year = last_year - 1
+    last_year = get_last_year(unemployment_df)
+    prev_year = last_year - 1
 
     # 3. Calculamos los valores de ambos años
-    last_unemployment_val = unemployment_df[unemployment_df["anio"] == last_year][
-        "valor"
-    ].mean()
+    last_val = unemployment_df[unemployment_df["anio"] == last_year]["valor"].mean()
 
     # Comprobamos si existe el año anterior para evitar errores
-    if previous_year in unemployment_df["anio"].values:
-        previous_unemployment_val = unemployment_df[
-            unemployment_df["anio"] == previous_year
-        ]["valor"].mean()
-        unemployment_diff = (
-            last_unemployment_val - previous_unemployment_val
-        )  # Diferencia en puntos porcentuales
-    else:
-        unemployment_diff = 0.0
+    prev_val = (
+        unemployment_df[unemployment_df["anio"] == prev_year]["valor"].mean()
+        if prev_year in unemployment_df["anio"].values
+        else last_val
+    )
 
-    return last_unemployment_val, unemployment_diff, last_year
-
-
-def display_html_chart(file_path):
-    """Función helper para cargar los gráficos HTML de forma segura."""
-    path = Path(file_path)
-    if path.exists():
-        html_content = path.read_text(encoding="utf-8")
-        st.iframe(html_content, height="content")
-    else:
-        st.warning(f"No se encontró el gráfico: {file_path}")
+    return last_val, last_val - prev_val, last_year
 
 
 # ── VISTA PRINCIPAL ────────────────────────────────────────────────────────
@@ -77,8 +48,8 @@ def show_home():
     # --- LECTURA DE DATOS PARA KPIs ---
     try:
         # Cargamos los CSVs preprocesados
-        salary_df = load_nominal_vs_real_salary()
-        housing_df = load_housing_comparison()
+        salary_df = load_csv("Salario_Nominal_vs_Real.csv")
+        housing_df = load_csv("Comparativa_Vivienda_Salario.csv")
 
         # KPIs Salario
         last_salary_year = int(salary_df["anio"].iloc[-1])
@@ -159,12 +130,12 @@ def show_home():
     with chart_col1:
         with st.container(border=True):
             st.markdown("**Salario nominal vs real · Tendencia histórica**")
-            display_html_chart("data_output/graphics/5_salario_nominal_vs_real.html")
+            render_html("5_salario_nominal_vs_real.html")
 
     with chart_col2:
         with st.container(border=True):
             st.markdown("**Vivienda vs Salarios · Base 100**")
-            display_html_chart("data_output/graphics/2_vivienda_vs_salarios.html")
+            render_html("2_vivienda_vs_salarios.html")
 
     # --- CONCLUSIONES ---
     with st.container(border=True):

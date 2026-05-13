@@ -1,96 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
-
-# Catálogo de datasets: nombre legible -> archivo CSV + descripción
-DATASETS = {
-    "💼 Evolución Salarial por CCAA": {
-        "file": "Evolucion_Salario_Comunidades.csv",
-        "desc": "Salario medio anual por Comunidad Autónoma y año. Fuente: EAES (INE Tabla 28191).",
-    },
-    "📈 Salario Nominal vs Real": {
-        "file": "Salario_Nominal_vs_Real.csv",
-        "desc": "Comparativa del salario bruto de nómina frente al salario deflactado por el IPC. Muestra la ilusión monetaria.",
-    },
-    "🏠 Comparativa Vivienda vs Salarios": {
-        "file": "Comparativa_Vivienda_Salario.csv",
-        "desc": "Evolución del IPV y el salario medio en Base 100 (2015). Permite ver qué crece más rápido.",
-    },
-    "⚖️ Brecha Salarial por Ocupación": {
-        "file": "Brecha_Salarial_Ocupacion.csv",
-        "desc": "Diferencia porcentual entre el salario de hombres y mujeres desglosada por tipo de ocupación (CNO-11).",
-    },
-    "📉 Paro vs Salarios por CCAA": {
-        "file": "Relacion_Paro_Salarios.csv",
-        "desc": "Cruce entre tasa de paro media y salario medio por región y año. Base de la Curva de Phillips regional.",
-    },
-    "🔗 Correlación Paro-Salarios (Pearson)": {
-        "file": "Correlacion_Paro_Salarios.csv",
-        "desc": "Coeficiente de correlación de Pearson entre paro y salario por Comunidad Autónoma.",
-    },
-    "👷 Calidad del Empleo (Temporalidad)": {
-        "file": "Calidad_Empleo.csv",
-        "desc": "Proporción de contratos indefinidos vs temporales a nivel nacional. Incluye el efecto de la reforma laboral de 2022.",
-    },
-    "📊 Desigualdad Salarial": {
-        "file": "Desigualdad_Salarial.csv",
-        "desc": "Evolución de la media, mediana, percentil 10 y cuartil inferior del salario en España.",
-    },
-    "🤖 Dataset ML (Regresión IPV)": {
-        "file": "ML.csv",
-        "desc": "Dataset consolidado usado para entrenar los modelos predictivos. Cruza vivienda, salarios, paro e IPC por categorías.",
-    },
-}
-
-# Diccionario de mapeo para mejorar la legibilidad de las columnas en la interfaz
-COLUMN_LABELS = {
-    "anio": "Año",
-    "comunidad": "Comunidad Autónoma",
-    "salario_medio": "Salario medio (€)",
-    "salario_nominal": "Salario nominal (€/mes)",
-    "salario_real": "Salario real (€/mes)",
-    "ipc_valor": "IPC anual (índice)",
-    "poder_adquisitivo": "Poder adquisitivo",
-    "ipv": "Índice Precio Vivienda",
-    "indice_salario": "Índice Salario (Base 100)",
-    "tasa_paro_media": "Tasa de paro (%)",
-    "Hombres": "Salario hombres (€)",
-    "Mujeres": "Salario mujeres (€)",
-    "brecha_porcentual": "Brecha salarial (%)",
-    "ocupacion": "Ocupación",
-    "sexo": "Sexo",
-    "indicador": "Indicador",
-    "salario": "Salario (€)",
-    "correlacion_pearson": "Correlación de Pearson",
-    "Asalariados_Total": "Asalariados totales (miles)",
-    "Asalariados_Temporal": "Asalariados temporales (miles)",
-    "Temporal (%)": "Tasa temporalidad (%)",
-    "Indefinido (%)": "Tasa indefinidos (%)",
-    "precio_vivienda": "IPV regional",
-}
-
-
-def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Recorre las columnas del DataFrame y las renombra si existen en el diccionario COLUMN_LABELS.
-    Esto permite mantener el código interno limpio pero mostrar etiquetas amigables al usuario.
-    """
-    return df.rename(
-        columns={c: COLUMN_LABELS[c] for c in df.columns if c in COLUMN_LABELS}
-    )
-
-
-# Ruta global de los datos procesados
-CSV_DIRECTORY = Path("data_output/csv")
-
-
-@st.cache_data
-def load_dataset(filename: str) -> pd.DataFrame:
-    """
-    Carga el archivo CSV y lo guarda en caché para mejorar el rendimiento
-    al cambiar entre diferentes vistas o filtros.
-    """
-    return pd.read_csv(CSV_DIRECTORY / filename)
+from utils.data import load_csv, rename_cols
+from config.constantes import DATASETS, CSV_DIR, PARQUET_DIR
 
 
 @st.dialog("Opciones de descarga")
@@ -107,27 +18,27 @@ def download_options_dialog(filtered_df, original_df, filename):
         st.subheader("Vista Filtrada")
         st.write(f"Registros: {len(filtered_df)}")
         csv_filtered = filtered_df.to_csv(index=False).encode("utf-8")
-        st.download_button(
+        if st.download_button(
             label="Descargar Filtrado",
             data=csv_filtered,
             file_name=f"filtered_{filename}",
             mime="text/csv",
-            use_container_width=True,
-            on_click=st.rerun,  # Cerramos el diálogo tras la acción
-        )
+            width="stretch",
+        ):
+            st.rerun()
 
     with col_dialog2:
         st.subheader("Dataset Completo")
         st.write(f"Registros: {len(original_df)}")
         csv_original = original_df.to_csv(index=False).encode("utf-8")
-        st.download_button(
+        if st.download_button(
             label="Descargar Original",
             data=csv_original,
             file_name=f"full_{filename}",
             mime="text/csv",
-            use_container_width=True,
-            on_click=st.rerun,
-        )
+            width="stretch",
+        ):
+            st.rerun()
 
 
 def render_filters(df: pd.DataFrame) -> pd.DataFrame:
@@ -212,13 +123,11 @@ def render_filters(df: pd.DataFrame) -> pd.DataFrame:
             for col_name in text_columns:
                 st.write(f"**Filtrar por {col_name}**")
                 options = sorted(filtered_df[col_name].dropna().unique().tolist())
-                total_options = len(options)
 
                 # Gestión de estado para botones de selección masiva
                 for opt in options:
-                    state_key = f"chk_{col_name}_{opt}"
-                    if state_key not in st.session_state:
-                        st.session_state[state_key] = True
+                    if f"chk_{col_name}_{opt}" not in st.session_state:
+                        st.session_state[f"chk_{col_name}_{opt}"] = True
 
                 # Cálculo de cuántos elementos hay seleccionados actualmente
                 checked_count = sum(
@@ -226,9 +135,9 @@ def render_filters(df: pd.DataFrame) -> pd.DataFrame:
                 )
 
                 # Botones de acción masiva
-                btn_col1, btn_col2, btn_spacer = st.columns([1, 1, 3])
+                btn_col1, btn_col2, _ = st.columns([1, 1, 3])
 
-                if checked_count < total_options:
+                if checked_count < len(options):
                     if btn_col1.button("Seleccionar todo", key=f"all_{col_name}"):
                         for opt in options:
                             st.session_state[f"chk_{col_name}_{opt}"] = True
@@ -242,19 +151,20 @@ def render_filters(df: pd.DataFrame) -> pd.DataFrame:
 
                 # Contenedor con scroll para evitar que la UI crezca demasiado
                 with st.container(height=150):
-                    selected_options = []
-                    for opt in options:
-                        if st.checkbox(opt, key=f"chk_{col_name}_{opt}"):
-                            selected_options.append(opt)
+                    selected = [
+                        opt
+                        for opt in options
+                        if st.checkbox(opt, key=f"chk_{col_name}_{opt}")
+                    ]
 
                 # Aplicación del filtro al DataFrame
-                if selected_options:
-                    filtered_df = filtered_df[
-                        filtered_df[col_name].isin(selected_options)
-                    ].reset_index(drop=True)
-                else:
-                    # Si no hay nada seleccionado, el resultado es un dataframe vacío
-                    filtered_df = filtered_df.iloc[0:0]
+                filtered_df = (
+                    filtered_df[filtered_df[col_name].isin(selected)].reset_index(
+                        drop=True
+                    )
+                    if selected
+                    else filtered_df.iloc[0:0]
+                )
 
     return filtered_df
 
@@ -269,13 +179,13 @@ def show_explore_data():
     )
 
     # Selector de dataset: El usuario elige una de las llaves del diccionario DATASETS
-    selected_dataset_name = st.selectbox(
+    selected = st.selectbox(
         "Selecciona un dataset",
         list(DATASETS.keys()),
         help="Todos los datasets están desnormalizados y limpios. Son el resultado final del pipeline Polars.",
     )
-    meta = DATASETS[selected_dataset_name]
-    file_path = CSV_DIRECTORY / meta["file"]
+    meta = DATASETS[selected]
+    file_path = CSV_DIR / meta["file"]
 
     # Muestra información técnica del archivo debajo del selector
     st.caption(f"📁 `data_output/csv/{meta['file']}` · {meta['desc']}")
@@ -288,8 +198,8 @@ def show_explore_data():
         return
 
     # Carga y renombramiento de columnas
-    raw_df = load_dataset(meta["file"])
-    labeled_df = rename_columns(raw_df)
+    raw_df = load_csv(meta["file"])
+    labeled_df = rename_cols(raw_df)
 
     # Contenedor para KPIs (se declara antes de los filtros pero se llena después)
     kpi_placeholder = st.container()
@@ -352,7 +262,7 @@ def show_explore_data():
             st.markdown("**Formato CSV**")
             st.caption("Ideal para Excel o Google Sheets.")
             # En lugar de descargar directo, abrimos el diálogo
-            if st.button("Configurar descarga CSV", use_container_width=True):
+            if st.button("Configurar descarga CSV", width="stretch"):
                 download_options_dialog(final_df, labeled_df, meta["file"])
 
     with download_col2:
@@ -360,18 +270,15 @@ def show_explore_data():
             st.markdown("**Formato Parquet (Solo original)**")
             st.caption("Archivo comprimido de alto rendimiento.")
 
-            parquet_path = Path("data_output/parquet") / meta["file"].replace(
-                ".csv", ".parquet"
-            )
+            parquet_path = PARQUET_DIR / meta["file"].replace(".csv", ".parquet")
+
             if parquet_path.exists():
                 st.download_button(
                     label="Descargar Parquet Original",
                     data=parquet_path.read_bytes(),
                     file_name=meta["file"].replace(".csv", ".parquet"),
                     mime="application/octet-stream",
-                    use_container_width=True,
+                    width="stretch",
                 )
             else:
-                st.button(
-                    "Parquet no disponible", disabled=True, use_container_width=True
-                )
+                st.button("Parquet no disponible", disabled=True, width="stretch")

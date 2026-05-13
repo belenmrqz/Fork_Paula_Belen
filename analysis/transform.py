@@ -174,15 +174,11 @@ def process_data_polars():
             "anio"
         )
 
-        # Extraemos el valor del salario de 2015 para usarlo como base de normalización
-        salary_2015 = (
-            df_hpi_salary_comparison.filter(pl.col("anio") == 2015)
-            .select("salario_medio")
-            .item()
-        )
+        salary_base = df_hpi_salary_comparison.head(1).select("salario_medio").item()
+
         # Creamos el índice del salario base 100 para comparar el ritmo de subida con la vivienda
         df_hpi_salary_comparison = df_hpi_salary_comparison.with_columns(
-            [(pl.col("salario_medio") / salary_2015 * 100).alias("indice_salario")]
+            [(pl.col("salario_medio") / salary_base * 100).alias("indice_salario")]
         )
 
         # -------------------------------------------------------------------
@@ -233,7 +229,7 @@ def process_data_polars():
                 (pl.col("indicador") == "Tasa_Paro")
                 & (pl.col("comunidad") != "Total Nacional")
                 & (pl.col("sexo") == "Ambos sexos")
-                & (pl.col("grupo_edad") == "Todas las edades")
+                & (pl.col("grupo_edad")== "Total")
                 & (pl.col("valor_empleo").is_not_null())
             )
             # Agrupamos por comunidad y año para convertir datos trimestrales a anuales
